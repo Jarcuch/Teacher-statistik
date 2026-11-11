@@ -113,6 +113,34 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <div id="toast" class="toast hidden"></div>
 <script>
 const KEY='teacherStatistik.v1';
+const DEFAULT_CRITERIA={
+ hobbies:[
+  "Žáci vědí, co se mají naučit",
+  "Zadání je srozumitelné a žáci vědí, jak začít",
+  "Většina žáků má příležitost aktivně pracovat",
+  "Zvolené činnosti pomáhají dosáhnout cíle hodiny",
+  "Žáci dostávají pomoc podle svých potřeb",
+  "Učitel ověřuje porozumění u více žáků",
+  "Žáci dostávají konkrétní radu, jak práci zlepšit",
+  "Žáci mají možnost chybu vysvětlit a opravit",
+  "Přechody mezi činnostmi jsou plynulé",
+  "Učitel reaguje na dotazy a chyby s respektem",
+  "Žáci na závěr ukážou nebo pojmenují, co se naučili"
+ ],
+ flaws:[
+  "Žákům není jasné, co se mají naučit",
+  "Nejasné zadání vede k opakovaným dotazům",
+  "Do práce se zapojuje jen malá část žáků",
+  "Činnosti mají slabou vazbu na cíl hodiny",
+  "Žáci, kteří se při práci zaseknou, zůstávají bez podpory",
+  "Porozumění se posuzuje jen podle odpovědí dobrovolníků",
+  "Zpětná vazba je obecná a žák neví, co má upravit",
+  "Chyba je označena bez vysvětlení nebo možnosti opravy",
+  "Při přechodech žáci opakovaně čekají bez úkolu",
+  "Na dotaz nebo chybu zazní znevažující poznámka",
+  "Hodina končí bez ověření, zda žáci cíle dosáhli"
+ ]
+};
 let db=normalizeData(), editing=null, modalKind='', currentRecordHobbies=[], currentRecordFlaws=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -120,11 +148,18 @@ const uid=()=>crypto.randomUUID();
 const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
 const colorSet=['#ffffff','#ec6b91','#36b8a4','#4d9be8','#e69b45','#e45e61','#7dba65','#ba83d8'];
 function normalizeData({partners=[],records=[],criteria}={}){
- const sharedCriteria={};
+ const sharedCriteria={defaultsAdded:true};
  for(const field of ['hobbies','flaws']){
   const items=criteria?.[field];
   const names=Array.isArray(items)?items:partners.flatMap(p=>Array.isArray(p[field])?p[field]:[]);
-  sharedCriteria[field]=[...new Set(names.filter(value=>typeof value==='string'&&value.trim()))];
+  const unique=new Set(names.filter(value=>typeof value==='string'&&value.trim()));
+  if(criteria?.defaultsAdded!==true){
+   const existing=new Set([...unique].map(value=>value.trim().toLowerCase()));
+   for(const name of DEFAULT_CRITERIA[field]){
+    if(!existing.has(name.toLowerCase()))unique.add(name);
+   }
+  }
+  sharedCriteria[field]=[...unique];
  }
  return {partners:partners.map(({hobbies,flaws,...teacher})=>teacher),records,criteria:sharedCriteria};
 }

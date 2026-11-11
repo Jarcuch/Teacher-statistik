@@ -23,7 +23,7 @@ button.secondary{background:var(--panel2);color:var(--text);border:1px solid var
 button.small{padding:8px 11px;font-size:13px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.chip{background:#30394a;border-radius:20px;padding:7px 10px;font-size:13px}.chip button{background:transparent;color:#ff9aa9;padding:0 0 0 8px}.checks label{display:flex;gap:10px;align-items:center;background:#222a39;padding:10px;border-radius:10px;margin:7px 0}.checks input{width:auto;margin:0}.settings-select{margin-top:5px}.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}
 input,select,textarea{width:100%;background:#111722;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:13px;font-size:16px;margin:5px 0 12px}
 label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
-nav{position:fixed;bottom:0;left:0;right:0;padding:9px 8px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:#151b26;border-top:1px solid var(--line);z-index:5}
+nav{position:fixed;bottom:0;left:0;right:0;padding:9px 8px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#151b26;border-top:1px solid var(--line);z-index:5}
 nav button{background:transparent;color:var(--muted);padding:8px 2px;font-size:12px}nav button.active{color:var(--accent)}
 nav span{display:block;font-size:20px;margin-bottom:3px}
 .partner{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.dot{width:14px;height:14px;border-radius:50%;flex:none}.avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.photo-preview{width:96px;height:96px;border-radius:18px;object-fit:cover;display:block;margin:10px 0;border:1px solid var(--line)}
@@ -50,6 +50,25 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
  <div class="card" id="partnerList"></div>
 </section>
+<section id="criteria" class="page hidden">
+ <h2>Kritéria</h2>
+ <div class="card">
+  <h3>Silné stránky</h3>
+  <div id="hobbyChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('hobbies')">
+   <input id="newHobby" aria-label="Nová silná stránka" placeholder="Nová silná stránka" style="margin:0">
+   <button type="submit" aria-label="Přidat silnou stránku">＋</button>
+  </form>
+ </div>
+ <div class="card">
+  <h3>Slabé stránky</h3>
+  <div id="flawChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('flaws')">
+   <input id="newFlaw" aria-label="Nová slabá stránka" placeholder="Nová slabá stránka" style="margin:0">
+   <button type="submit" aria-label="Přidat slabou stránku">＋</button>
+  </form>
+ </div>
+</section>
 <section id="records" class="page hidden">
  <div class="row between"><h2>Záznamy</h2><button onclick="openRecord()" id="addRecordBtn">＋ Přidat</button></div>
  <div class="card" id="recordList"></div>
@@ -66,19 +85,20 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
  <div class="grid"><div class="card metric"><span>Záznamů ve výběru</span><strong id="filteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="activeCount">0</strong></div></div>
  <div class="card"><h3>Podle učitelů</h3><div id="partnerStats"></div></div>
  <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
- <div class="card"><h3>Nejčastější kladné stránky</h3><div id="hobbyStats"></div></div>
+ <div class="card"><h3>Nejčastější silné stránky</h3><div id="hobbyStats"></div></div>
  <div class="card"><h3>Nejčastější slabé stránky</h3><div id="flawStats"></div></div>
  <div class="card" id="topPartner"></div>
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
- <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, fotografie, kladné stránky, slabé stránky, poznámky a záznamy. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+ <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, fotografie, silné stránky, slabé stránky, poznámky a záznamy. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
  <div class="card"><h3>Soukromí</h3><p class="sub">Údaje se ukládají v prohlížeči na tomto zařízení. Pravidelně exportujte zálohu.</p></div>
 </section>
 </main>
 <nav>
  <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Přehled</button>
  <button data-page="partners" onclick="showPage('partners')"><span>♙</span>Učitelé</button>
+ <button data-page="criteria" onclick="showPage('criteria')"><span>☷</span>Kritéria</button>
  <button data-page="records" onclick="showPage('records')"><span>▤</span>Záznamy</button>
  <button data-page="stats" onclick="showPage('stats')"><span>▥</span>Statistiky</button>
  <button data-page="settings" onclick="showPage('settings')"><span>⚙</span>Nastavení</button>
@@ -93,18 +113,27 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <div id="toast" class="toast hidden"></div>
 <script>
 const KEY='teacherStatistik.v1';
-let db={partners:[],records:[]}, editing=null, modalKind='', workingHobbies=[], workingFlaws=[], currentRecordHobbies=[], currentRecordFlaws=[];
+let db=normalizeData(), editing=null, modalKind='', currentRecordHobbies=[], currentRecordFlaws=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
 const colorSet=['#ffffff','#ec6b91','#36b8a4','#4d9be8','#e69b45','#e45e61','#7dba65','#ba83d8'];
-function load(){try{db=JSON.parse(localStorage.getItem(KEY))||{partners:[],records:[]}}catch{db={partners:[],records:[]}}}
+function normalizeData({partners=[],records=[],criteria}={}){
+ const sharedCriteria={};
+ for(const field of ['hobbies','flaws']){
+  const items=criteria?.[field];
+  const names=Array.isArray(items)?items:partners.flatMap(p=>Array.isArray(p[field])?p[field]:[]);
+  sharedCriteria[field]=[...new Set(names.filter(value=>typeof value==='string'&&value.trim()))];
+ }
+ return {partners:partners.map(({hobbies,flaws,...teacher})=>teacher),records,criteria:sharedCriteria};
+}
+function load(){try{db=normalizeData(JSON.parse(localStorage.getItem(KEY))||undefined)}catch{db=normalizeData()}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
 function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
 function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name):'Smazaný učitel'}
-function rowRecord(r){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné stránky: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Slabé stránky: '+esc(r.flaws.join(', ')):''}</small>${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div><button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button></div>`}
+function rowRecord(r){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Silné stránky: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Slabé stránky: '+esc(r.flaws.join(', ')):''}</small>${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div><button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button></div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
 function avatar(p){const photo=safePhoto(p.photo);return photo?`<div class="avatar" style="background:${esc(p.color)}"><img src="${photo}" alt="Profilová fotografie"></div>`:`<div class="avatar" style="background:${esc(p.color)}">${esc((p.name).slice(0,1).toUpperCase())}</div>`}
 let workingPhoto='';
@@ -117,6 +146,7 @@ function render(){
  $('partnerList').innerHTML=db.partners.map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
  $('addRecordBtn').disabled=!db.partners.length;
+ renderCriteria();
  renderStats();
 }
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
@@ -132,21 +162,39 @@ function openPartner(id){
  <p class="sub">Fotografie se zmenší na 320 × 320 px, uloží pouze do tohoto zařízení a zahrne do zálohy.</p>
  <label>Barva</label><div class="row" style="flex-wrap:wrap">${colorSet.map(c=>`<button class="small" style="background:${c};width:38px;height:38px;padding:0;border:2px solid ${(p?.color||colorSet[0])===c?'white':'transparent'}" onclick="document.getElementById('pColor').value='${c}'"></button>`).join('')}</div>
  <input id="pColor" type="color" value="${p?.color||colorSet[0]}">
- <label>Kladné stránky</label><div id="hobbyChips" class="chips"></div>
- <div class="row"><input id="newHobby" placeholder="Nová kladná stránka" style="margin:0"><button type="button" onclick="addHobby()">＋</button></div>
- <label>Slabé stránky</label><div id="flawChips" class="chips"></div>
- <div class="row"><input id="newFlaw" placeholder="Nová slabá stránka" style="margin:0"><button type="button" onclick="addFlaw()">＋</button></div>
- <p class="sub">Kladné stránky i slabé stránky můžeš upravovat. Starší záznamy zůstanou zachované.</p>
  <button style="width:100%" onclick="savePartner()">Uložit učitele</button>`);
- workingHobbies=Array.isArray(p?.hobbies)?[...p.hobbies]:[];workingFlaws=Array.isArray(p?.flaws)?[...p.flaws]:[];workingPhoto=safePhoto(p?.photo);previewPhoto();renderHobbyChips();renderFlawChips();
+ workingPhoto=safePhoto(p?.photo);previewPhoto();
 }
-function renderHobbyChips(){$('hobbyChips').innerHTML=workingHobbies.map((h,i)=>`<span class="chip">${esc(h)} <button type="button" onclick="removeHobby(${i})" aria-label="Odebrat">×</button></span>`).join('')||'<span class="sub">Zatím žádné kladné stránky.</span>'}
-function addHobby(){const h=$('newHobby').value.trim();if(!h)return;if(workingHobbies.some(x=>x.toLowerCase()===h.toLowerCase()))return toast('Tato kladná stránka už existuje.');workingHobbies.push(h);$('newHobby').value='';renderHobbyChips()}
-function removeHobby(i){workingHobbies.splice(i,1);renderHobbyChips()}
-function renderFlawChips(){$('flawChips').innerHTML=workingFlaws.map((h,i)=>`<span class="chip">${esc(h)} <button type="button" onclick="removeFlaw(${i})" aria-label="Odebrat">×</button></span>`).join('')||'<span class="sub">Zatím žádné slabé stránky.</span>'}
-function addFlaw(){const h=$('newFlaw').value.trim();if(!h)return;if(workingFlaws.some(x=>x.toLowerCase()===h.toLowerCase()))return toast('Tato slabá stránka už existuje.');workingFlaws.push(h);$('newFlaw').value='';renderFlawChips()}
-function removeFlaw(i){workingFlaws.splice(i,1);renderFlawChips()}
-function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,hobbies:[...workingHobbies],flaws:[...workingFlaws],photo:workingPhoto};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
+const criteriaGroups={
+ hobbies:{list:'hobbyChips',input:'newHobby',empty:'Zatím žádné silné stránky.'},
+ flaws:{list:'flawChips',input:'newFlaw',empty:'Zatím žádné slabé stránky.'}
+};
+function renderCriteria(){
+ for(const [field,{list,empty}] of Object.entries(criteriaGroups)){
+  $(list).innerHTML=db.criteria[field].map((name,index)=>
+   `<span class="chip">${esc(name)} <button type="button" onclick="removeCriterion('${field}',${index})" aria-label="Odebrat ${esc(name)}">×</button></span>`
+  ).join('')||`<span class="sub">${empty}</span>`;
+ }
+}
+function saveCriteria(field,values){
+ const next={...db,criteria:{...db.criteria,[field]:values}};
+ try{localStorage.setItem(KEY,JSON.stringify(next))}
+ catch{return toast('Kritéria se nepodařilo uložit.')}
+ db=next;
+ renderCriteria();
+ return true;
+}
+function addCriterion(field){
+ const input=$(criteriaGroups[field].input);
+ const name=input.value.trim();
+ if(!name)return;
+ if(db.criteria[field].some(value=>value.toLowerCase()===name.toLowerCase()))return toast('Toto kritérium už existuje.');
+ if(saveCriteria(field,[...db.criteria[field],name]))input.value='';
+}
+function removeCriterion(field,index){
+ saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
+}
+function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,photo:workingPhoto};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
 function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);save()}
 function openRecord(id){
  if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
@@ -154,16 +202,25 @@ function openRecord(id){
  openModal(r?'Upravit záznam':'Nový záznam',`
  <label>Učitel</label><select id="rPartner">${db.partners.map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
  <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
- <label>Kladné stránky (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
+ <label>Silné stránky (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
  <label>Slabé stránky (lze vybrat více)</label><div id="recordFlawChecks" class="checks"></div>
  <label>Poznámka (nepovinné, mimo statistiky)</label><textarea id="rNote" rows="3" maxlength="10000" placeholder="Poznámka k záznamu…"></textarea>
  <button style="width:100%" onclick="saveRecord()">Uložit záznam</button>`);
  currentRecordHobbies=Array.isArray(r?.hobbies)?[...r.hobbies]:[];currentRecordFlaws=Array.isArray(r?.flaws)?[...r.flaws]:[];
  $('rNote').value=r?.note||'';
- $('rPartner').addEventListener('change',()=>{currentRecordHobbies=[];currentRecordFlaws=[];renderRecordHobbies();renderRecordFlaws()});renderRecordHobbies();renderRecordFlaws();
+ renderRecordCriteria('hobbies','recordHobbyChecks',currentRecordHobbies,values=>{currentRecordHobbies=values});
+ renderRecordCriteria('flaws','recordFlawChecks',currentRecordFlaws,values=>{currentRecordFlaws=values});
 }
-function renderRecordHobbies(){const p=db.partners.find(x=>x.id===$('rPartner').value);const list=[...new Set([...(p?.hobbies||[]),...currentRecordHobbies])];$('recordHobbyChecks').innerHTML=list.map((h,i)=>`<label><input type="checkbox" data-hobby="${i}" ${currentRecordHobbies.includes(h)?'checked':''}><span>${esc(h)}${!(p?.hobbies||[]).includes(h)?' (historická)':''}</span></label>`).join('')||'<p class="sub">U učitele nejsou uvedeny žádné kladné stránky.</p>';$('recordHobbyChecks').querySelectorAll('input').forEach((input,i)=>input.addEventListener('change',()=>{const h=list[i];currentRecordHobbies=input.checked?[...new Set([...currentRecordHobbies,h])]:currentRecordHobbies.filter(x=>x!==h)}))}
-function renderRecordFlaws(){const p=db.partners.find(x=>x.id===$('rPartner').value);const list=[...new Set([...(p?.flaws||[]),...currentRecordFlaws])];$('recordFlawChecks').innerHTML=list.map((h,i)=>`<label><input type="checkbox" ${currentRecordFlaws.includes(h)?'checked':''}><span>${esc(h)}${!(p?.flaws||[]).includes(h)?' (historická)':''}</span></label>`).join('')||'<p class="sub">U učitele nejsou uvedeny žádné slabé stránky.</p>';$('recordFlawChecks').querySelectorAll('input').forEach((input,i)=>input.addEventListener('change',()=>{const h=list[i];currentRecordFlaws=input.checked?[...new Set([...currentRecordFlaws,h])]:currentRecordFlaws.filter(x=>x!==h)}))}
+function renderRecordCriteria(field,target,selected,onChange){
+ const active=db.criteria[field];
+ const options=[...new Set([...active,...selected])];
+ const container=$(target);
+ container.innerHTML=options.map(name=>
+  `<label><input type="checkbox" ${selected.includes(name)?'checked':''}><span>${esc(name)}${active.includes(name)?'':' (historická)'}</span></label>`
+ ).join('')||'<p class="sub">Položky přidáte v záložce Kritéria.</p>';
+ const inputs=[...container.querySelectorAll('input')];
+ inputs.forEach(input=>input.addEventListener('change',()=>onChange(options.filter((_,index)=>inputs[index].checked))));
+}
 function saveRecord(){const date=new Date($('rDate').value);if(!Number.isFinite(date.getTime()))return toast('Zkontrolujte datum a čas.');const item={id:editing||uid(),partnerId:$('rPartner').value,date:date.toISOString(),hobbies:[...currentRecordHobbies],flaws:[...currentRecordFlaws],note:$('rNote').value};if(editing)db.records=db.records.map(r=>r.id===editing?item:r);else db.records.push(item);closeModal();save();toast('Záznam uložen.')}
 function deleteRecord(id){if(!confirm('Opravdu chcete tento záznam smazat?'))return;db.records=db.records.filter(r=>r.id!==id);save()}
 function renderStats(){
@@ -176,13 +233,13 @@ function renderStats(){
  const months={};rows.forEach(r=>{const d=new Date(r.date);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=(months[k]||0)+1});
  const entries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));const mm=Math.max(1,...entries.map(x=>x[1]));
  $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:var(--accent)"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
- const tally=(field,target,color)=>{const c={};rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
+ const tally=(field,target,color)=>{const c=Object.create(null);rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
  tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
  $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
 $('allTime').addEventListener('change',renderStats);$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
-function exportData(){const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
-$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();if(p.photo&&!safePhoto(p.photo))throw Error()}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db={partners:x.partners,records:x.records};try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Import selhal: úložiště je plné.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
+function exportData(){const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();if(p.photo&&!safePhoto(p.photo))throw Error()}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Import selhal: úložiště je plné.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();
 $('today').textContent=new Date().toLocaleDateString('cs-CZ',{dateStyle:'full'});
 render();

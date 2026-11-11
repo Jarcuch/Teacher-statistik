@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Teacher_statistik</title>
 <style>
-:root{color-scheme:dark;--bg:#0e1119;--panel:#191f2b;--panel2:#222a39;--muted:#9ba6b8;--text:#f5f6fa;--accent:#a78bfa;--line:#30394a;--danger:#ff647c}
+:root{color-scheme:dark;--bg:#0e1119;--panel:#191f2b;--panel2:#222a39;--muted:#9ba6b8;--text:#f5f6fa;--accent:#ffffff;--line:#30394a;--danger:#ff647c}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
 header{padding:calc(18px + env(safe-area-inset-top)) 18px 14px;display:flex;justify-content:space-between;align-items:center}
 h1{font-size:25px;margin:0}h2{font-size:19px;margin:8px 0 14px}h3{font-size:16px;margin:0 0 8px}
@@ -98,7 +98,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
-const colorSet=['#9b87f5','#ec6b91','#36b8a4','#4d9be8','#e69b45','#e45e61','#7dba65','#ba83d8'];
+const colorSet=['#ffffff','#ec6b91','#36b8a4','#4d9be8','#e69b45','#e45e61','#7dba65','#ba83d8'];
 function load(){try{db=JSON.parse(localStorage.getItem(KEY))||{partners:[],records:[]}}catch{db={partners:[],records:[]}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
@@ -175,9 +175,9 @@ function renderStats(){
  $('partnerStats').innerHTML=counts.map(x=>`<div class="barline"><span>${esc(x.p.nickname||x.p.name)}</span><div class="track"><div class="fill" style="width:${x.n/max*100}%;background:${x.p.color}"></div></div><b>${x.n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
  const months={};rows.forEach(r=>{const d=new Date(r.date);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=(months[k]||0)+1});
  const entries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));const mm=Math.max(1,...entries.map(x=>x[1]));
- $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:#a78bfa"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
+ $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:var(--accent)"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
  const tally=(field,target,color)=>{const c={};rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
- tally('hobbies','hobbyStats','#a78bfa');tally('flaws','flawStats','#f28b82');
+ tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
  $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.nickname||counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
 $('allTime').addEventListener('change',renderStats);$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);

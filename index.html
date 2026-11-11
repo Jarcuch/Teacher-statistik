@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T21:49:57.000Z">11. 11. 2026 22:49</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T21:57:15.000Z">11. 11. 2026 22:57</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -210,10 +210,11 @@ let workingPhoto='';
 function previewPhoto(){const el=$('photoPreview');if(!el)return;const photo=safePhoto(workingPhoto);el.innerHTML=photo?`<img class="photo-preview" src="${photo}" alt="Náhled fotografie">`:'<p class="sub">Bez profilové fotografie.</p>'}
 async function choosePhoto(input){const file=input.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return toast('Vyber obrázek.');if(file.size>15*1024*1024)return toast('Fotografie je příliš velká (max. 15 MB).');try{const url=URL.createObjectURL(file);const img=new Image();try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});const c=document.createElement('canvas');const size=320;c.width=size;c.height=size;const side=Math.min(img.naturalWidth,img.naturalHeight);c.getContext('2d').drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,size,size);workingPhoto=c.toDataURL('image/jpeg',.72);previewPhoto()}finally{URL.revokeObjectURL(url)}}catch{toast('Fotografii se nepodařilo načíst.')}}
 function removePhoto(){workingPhoto='';if($('pPhoto'))$('pPhoto').value='';previewPhoto()}
+function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
  $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
  $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
- $('partnerList').innerHTML=db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs')).map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
+ $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
 
  renderCriteria();
@@ -274,7 +275,7 @@ function openRecord(id,observation=false){
  const isObservation=r?r.type==='observation':observation;
  modalKind=isObservation?'observation':'record';const d=r?new Date(r.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
  openModal(isObservation?(r?'Upravit hospitační záznam':'Nový hospitační záznam'):(r?'Upravit záznam':'Nový záznam'),`
- <label>Učitel</label><select id="rPartner">${db.partners.map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+ <label>Učitel</label><select id="rPartner">${sortedTeachers().map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
  <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
  <label for="rTopic">Téma hodiny (nepovinné)</label><input id="rTopic" value="${esc(r?.topic||'')}" placeholder="Téma hodiny">
  <label>${isObservation?'Kladné hodnocení':'Silné stránky'} (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>

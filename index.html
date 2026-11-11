@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T21:58:40.000Z">11. 11. 2026 22:58</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T22:02:16.000Z">11. 11. 2026 23:02</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -103,7 +103,10 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 <section id="stats" class="page hidden">
  <h2>Statistiky</h2>
  <div class="card">
-  <label><input type="checkbox" id="allTime" checked style="width:auto;margin-right:8px">Celé období</label>
+  <div class="row" style="flex-wrap:wrap">
+   <label><input type="checkbox" id="allTime" checked style="width:auto;margin-right:8px">Celé období</label>
+   <label><input type="checkbox" id="currentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+  </div>
   <div id="dateFilters" class="hidden">
    <label>Od</label><input type="date" id="fromDate">
    <label>Do</label><input type="date" id="toDate">
@@ -309,8 +312,16 @@ function saveRecord(){const date=new Date($('rDate').value);if(!Number.isFinite(
  if(editing)db.records=db.records.map(r=>r.id===editing?item:r);else db.records.push(item);closeModal();save();toast('Záznam uložen.')}
 function deleteRecord(id){if(!confirm('Opravdu chcete tento záznam smazat?'))return;db.records=db.records.filter(r=>r.id!==id);save()}
 function renderStats(){
- const all=$('allTime').checked;$('dateFilters').classList.toggle('hidden',all);
- let rows=db.records;if(!all){const from=$('fromDate').value?new Date($('fromDate').value+'T00:00:00'):new Date(0);const to=$('toDate').value?new Date($('toDate').value+'T23:59:59.999'):new Date();rows=rows.filter(r=>new Date(r.date)>=from&&new Date(r.date)<=to)}
+ const all=$('allTime').checked;
+ const currentMonth=$('currentMonth').checked;
+ $('dateFilters').classList.toggle('hidden',all||currentMonth);
+ let rows=db.records;
+ if(currentMonth){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,1);
+  rows=rows.filter(record=>{const date=new Date(record.date);return date>=start&&date<end});
+ }else if(!all){const from=$('fromDate').value?new Date($('fromDate').value+'T00:00:00'):new Date(0);const to=$('toDate').value?new Date($('toDate').value+'T23:59:59.999'):new Date();rows=rows.filter(r=>new Date(r.date)>=from&&new Date(r.date)<=to)}
  const counts=db.partners.map(p=>({p,n:rows.filter(r=>r.partnerId===p.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
  $('filteredCount').textContent=rows.length;$('activeCount').textContent=counts.length;
  const max=Math.max(1,...counts.map(x=>x.n));
@@ -322,7 +333,15 @@ function renderStats(){
  tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
  $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
-$('allTime').addEventListener('change',renderStats);$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
+$('allTime').addEventListener('change',()=>{
+ if($('allTime').checked)$('currentMonth').checked=false;
+ renderStats();
+});
+$('currentMonth').addEventListener('change',()=>{
+ if($('currentMonth').checked)$('allTime').checked=false;
+ renderStats();
+});
+$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
 function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();if(p.photo&&!safePhoto(p.photo))throw Error()}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Import selhal: úložiště je plné.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();

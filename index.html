@@ -103,10 +103,10 @@ function load(){try{db=JSON.parse(localStorage.getItem(KEY))||{partners:[],recor
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
 function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
-function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.nickname||p.name):'Smazaný učitel'}
-function rowRecord(r){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.nickname||p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné stránky: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Slabé stránky: '+esc(r.flaws.join(', ')):''}</small>${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div><button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button></div>`}
+function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name):'Smazaný učitel'}
+function rowRecord(r){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné stránky: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Slabé stránky: '+esc(r.flaws.join(', ')):''}</small>${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div><button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button></div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
-function avatar(p){const photo=safePhoto(p.photo);return photo?`<div class="avatar" style="background:${esc(p.color)}"><img src="${photo}" alt="Profilová fotografie"></div>`:`<div class="avatar" style="background:${esc(p.color)}">${esc((p.nickname||p.name).slice(0,1).toUpperCase())}</div>`}
+function avatar(p){const photo=safePhoto(p.photo);return photo?`<div class="avatar" style="background:${esc(p.color)}"><img src="${photo}" alt="Profilová fotografie"></div>`:`<div class="avatar" style="background:${esc(p.color)}">${esc((p.name).slice(0,1).toUpperCase())}</div>`}
 let workingPhoto='';
 function previewPhoto(){const el=$('photoPreview');if(!el)return;const photo=safePhoto(workingPhoto);el.innerHTML=photo?`<img class="photo-preview" src="${photo}" alt="Náhled fotografie">`:'<p class="sub">Bez profilové fotografie.</p>'}
 async function choosePhoto(input){const file=input.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return toast('Vyber obrázek.');if(file.size>15*1024*1024)return toast('Fotografie je příliš velká (max. 15 MB).');try{const url=URL.createObjectURL(file);const img=new Image();try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});const c=document.createElement('canvas');const size=320;c.width=size;c.height=size;const side=Math.min(img.naturalWidth,img.naturalHeight);c.getContext('2d').drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,size,size);workingPhoto=c.toDataURL('image/jpeg',.72);previewPhoto()}finally{URL.revokeObjectURL(url)}}catch{toast('Fotografii se nepodařilo načíst.')}}
@@ -114,7 +114,7 @@ function removePhoto(){workingPhoto='';if($('pPhoto'))$('pPhoto').value='';previ
 function render(){
  $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
  $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
- $('partnerList').innerHTML=db.partners.map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Bez přezdívky')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
+ $('partnerList').innerHTML=db.partners.map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
  $('addRecordBtn').disabled=!db.partners.length;
  renderStats();
@@ -125,7 +125,7 @@ function openPartner(id){
  const p=db.partners.find(x=>x.id===id);editing=id||null;modalKind='partner';
  openModal(p?'Upravit učitele':'Nový učitel',`
  <label>Jméno</label><input id="pName" value="${esc(p?.name||'')}" placeholder="Jméno">
- <label>Přezdívka (nepovinné)</label><input id="pNick" value="${esc(p?.nickname||'')}" placeholder="Přezdívka">
+ <label>Učebna (nepovinné)</label><input id="pNick" value="${esc(p?.nickname||'')}" placeholder="Učebna">
  <label>Profilová fotografie (nepovinné)</label><div id="photoPreview"></div>
  <input id="pPhoto" type="file" accept="image/*" onchange="choosePhoto(this)">
  <button class="small secondary" type="button" onclick="removePhoto()">Odebrat fotografii</button>
@@ -152,7 +152,7 @@ function openRecord(id){
  if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
  const r=db.records.find(x=>x.id===id);editing=id||null;modalKind='record';const d=r?new Date(r.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
  openModal(r?'Upravit záznam':'Nový záznam',`
- <label>Učitel</label><select id="rPartner">${db.partners.map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.nickname||p.name)}</option>`).join('')}</select>
+ <label>Učitel</label><select id="rPartner">${db.partners.map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
  <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
  <label>Kladné stránky (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
  <label>Slabé stránky (lze vybrat více)</label><div id="recordFlawChecks" class="checks"></div>
@@ -172,13 +172,13 @@ function renderStats(){
  const counts=db.partners.map(p=>({p,n:rows.filter(r=>r.partnerId===p.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
  $('filteredCount').textContent=rows.length;$('activeCount').textContent=counts.length;
  const max=Math.max(1,...counts.map(x=>x.n));
- $('partnerStats').innerHTML=counts.map(x=>`<div class="barline"><span>${esc(x.p.nickname||x.p.name)}</span><div class="track"><div class="fill" style="width:${x.n/max*100}%;background:${x.p.color}"></div></div><b>${x.n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
+ $('partnerStats').innerHTML=counts.map(x=>`<div class="barline"><span>${esc(x.p.name)}</span><div class="track"><div class="fill" style="width:${x.n/max*100}%;background:${x.p.color}"></div></div><b>${x.n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
  const months={};rows.forEach(r=>{const d=new Date(r.date);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=(months[k]||0)+1});
  const entries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));const mm=Math.max(1,...entries.map(x=>x[1]));
  $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:var(--accent)"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
  const tally=(field,target,color)=>{const c={};rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
  tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
- $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.nickname||counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
+ $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
 $('allTime').addEventListener('change',renderStats);$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
 function exportData(){const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}

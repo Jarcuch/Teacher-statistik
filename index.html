@@ -143,7 +143,7 @@ function removePhoto(){workingPhoto='';if($('pPhoto'))$('pPhoto').value='';previ
 function render(){
  $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
  $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
- $('partnerList').innerHTML=db.partners.map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
+ $('partnerList').innerHTML=db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs')).map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
  $('addRecordBtn').disabled=!db.partners.length;
  renderCriteria();

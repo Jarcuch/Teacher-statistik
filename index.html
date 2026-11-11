@@ -55,6 +55,25 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
  <div class="card">
   <h3>Hospitační záznam</h3>
   <button type="button" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
+  <details>
+   <summary>Kritéria hospitace</summary>
+ <div class="card">
+  <h4>Silné stránky</h4>
+  <div id="observationHobbyChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationHobbies')">
+   <input id="newObservationHobby" aria-label="Nová silná stránka" placeholder="Nová silná stránka" style="margin:0">
+   <button type="submit" aria-label="Přidat silnou stránku">＋</button>
+  </form>
+ </div>
+ <div class="card">
+  <h4>Slabé stránky</h4>
+  <div id="observationFlawChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationFlaws')">
+   <input id="newObservationFlaw" aria-label="Nová slabá stránka" placeholder="Nová slabá stránka" style="margin:0">
+   <button type="submit" aria-label="Přidat slabou stránku">＋</button>
+  </form>
+ </div>
+  </details>
  </div>
  <div class="card">
   <h3>Silné stránky</h3>
@@ -163,7 +182,13 @@ function normalizeData({partners=[],records=[],criteria}={}){
     if(!existing.has(name.toLowerCase()))unique.add(name);
    }
   }
-  sharedCriteria[field]=[...unique];
+  const observationField=field==='hobbies'?'observationHobbies':'observationFlaws';
+  const observationItems=criteria?.[observationField];
+  const hasObservationList=Array.isArray(observationItems);
+  sharedCriteria[field]=hasObservationList?[...unique]:[];
+  sharedCriteria[observationField]=hasObservationList
+   ?[...new Set(observationItems.filter(value=>typeof value==='string'&&value.trim()))]
+   :[...unique];
  }
  return {partners:partners.map(({hobbies,flaws,...teacher})=>teacher),records,criteria:sharedCriteria};
 }
@@ -208,7 +233,9 @@ function openPartner(id){
 }
 const criteriaGroups={
  hobbies:{list:'hobbyChips',input:'newHobby',empty:'Zatím žádné silné stránky.'},
- flaws:{list:'flawChips',input:'newFlaw',empty:'Zatím žádné slabé stránky.'}
+ flaws:{list:'flawChips',input:'newFlaw',empty:'Zatím žádné slabé stránky.'},
+ observationHobbies:{list:'observationHobbyChips',input:'newObservationHobby',empty:'Zatím žádné silné stránky.'},
+ observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',empty:'Zatím žádné slabé stránky.'}
 };
 function renderCriteria(){
  for(const [field,{list,empty}] of Object.entries(criteriaGroups)){
@@ -255,8 +282,8 @@ function openRecord(id,observation=false){
  <button style="width:100%" onclick="saveRecord()">Uložit záznam</button>`);
  currentRecordHobbies=Array.isArray(r?.hobbies)?[...r.hobbies]:[];currentRecordFlaws=Array.isArray(r?.flaws)?[...r.flaws]:[];
  $('rNote').value=r?.note||'';
- renderRecordCriteria('hobbies','recordHobbyChecks',currentRecordHobbies,values=>{currentRecordHobbies=values});
- renderRecordCriteria('flaws','recordFlawChecks',currentRecordFlaws,values=>{currentRecordFlaws=values});
+ renderRecordCriteria(isObservation?'observationHobbies':'hobbies','recordHobbyChecks',currentRecordHobbies,values=>{currentRecordHobbies=values});
+ renderRecordCriteria(isObservation?'observationFlaws':'flaws','recordFlawChecks',currentRecordFlaws,values=>{currentRecordFlaws=values});
 }
 function renderRecordCriteria(field,target,selected,onChange){
  const active=db.criteria[field];
@@ -291,7 +318,7 @@ function renderStats(){
  $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
 $('allTime').addEventListener('change',renderStats);$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
-function exportData(){const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();if(p.photo&&!safePhoto(p.photo))throw Error()}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Import selhal: úložiště je plné.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();
 $('today').textContent=new Date().toLocaleDateString('cs-CZ',{dateStyle:'full'});

@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T21:41:53.000Z">11. 11. 2026 22:41</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T21:49:57.000Z">11. 11. 2026 22:49</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -97,7 +97,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
 </section>
 <section id="records" class="page hidden">
- <div class="row between"><h2>Záznamy</h2><button onclick="openRecord()" id="addRecordBtn">＋ Přidat</button></div>
+ <h2>Záznamy</h2>
  <div class="card" id="recordList"></div>
 </section>
 <section id="stats" class="page hidden">
@@ -215,7 +215,7 @@ function render(){
  $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
  $('partnerList').innerHTML=db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs')).map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(rowRecord).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
- $('addRecordBtn').disabled=!db.partners.length;
+
  renderCriteria();
  renderStats();
 }

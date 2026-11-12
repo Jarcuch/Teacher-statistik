@@ -26,7 +26,7 @@ label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
 nav{position:fixed;bottom:0;left:0;right:0;padding:9px 8px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#151b26;border-top:1px solid var(--line);z-index:5}
 nav button{background:transparent;color:var(--muted);padding:8px 2px;font-size:12px}nav button.active{color:var(--accent)}
 nav span{display:block;font-size:20px;margin-bottom:3px}
-.partner{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.dot{width:14px;height:14px;border-radius:50%;flex:none}.avatar{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}.avatar img{width:100%;height:100%;object-fit:cover}.photo-preview{width:96px;height:96px;border-radius:18px;object-fit:cover;display:block;margin:10px 0;border:1px solid var(--line)}
+.partner{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.dot{width:14px;height:14px;border-radius:50%;flex:none}
 .partner .info{flex:1;min-width:0}.partner .info b{display:block}.partner .info small{color:var(--muted)}
 .hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.barline{display:grid;grid-template-columns:minmax(65px,1fr) 2fr 28px;gap:8px;align-items:center;margin:11px 0;font-size:13px}.track{height:11px;background:#30394a;border-radius:9px;overflow:hidden}.fill{height:100%;border-radius:9px}
 .toast{position:fixed;top:calc(10px + env(safe-area-inset-top));left:16px;right:16px;background:#293347;border:1px solid var(--line);padding:13px;border-radius:12px;z-index:20;text-align:center}
@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:28:44.000Z">12. 11. 2026 15:28</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:30:48.000Z">12. 11. 2026 15:30</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -208,11 +208,6 @@ function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partne
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
  ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
-function avatar(p){const photo=safePhoto(p.photo);return photo?`<div class="avatar" style="background:${esc(p.color)}"><img src="${photo}" alt="Profilová fotografie"></div>`:`<div class="avatar" style="background:${esc(p.color)}">${esc((p.name).slice(0,1).toUpperCase())}</div>`}
-let workingPhoto='';
-function previewPhoto(){const el=$('photoPreview');if(!el)return;const photo=safePhoto(workingPhoto);el.innerHTML=photo?`<img class="photo-preview" src="${photo}" alt="Náhled fotografie">`:'<p class="sub">Bez profilové fotografie.</p>'}
-async function choosePhoto(input){const file=input.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return toast('Vyber obrázek.');if(file.size>15*1024*1024)return toast('Fotografie je příliš velká (max. 15 MB).');try{const url=URL.createObjectURL(file);const img=new Image();try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});const c=document.createElement('canvas');const size=320;c.width=size;c.height=size;const side=Math.min(img.naturalWidth,img.naturalHeight);c.getContext('2d').drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,size,size);workingPhoto=c.toDataURL('image/jpeg',.72);previewPhoto()}finally{URL.revokeObjectURL(url)}}catch{toast('Fotografii se nepodařilo načíst.')}}
-function removePhoto(){workingPhoto='';if($('pPhoto'))$('pPhoto').value='';previewPhoto()}
 function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
  $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
@@ -230,14 +225,10 @@ function openPartner(id){
  openModal(p?'Upravit učitele':'Nový učitel',`
  <label>Jméno</label><input id="pName" value="${esc(p?.name||'')}" placeholder="Jméno">
  <label>Učebna (nepovinné)</label><input id="pNick" value="${esc(p?.nickname||'')}" placeholder="Učebna">
- <label>Profilová fotografie (nepovinné)</label><div id="photoPreview"></div>
- <input id="pPhoto" type="file" accept="image/*" onchange="choosePhoto(this)">
- <button class="small secondary" type="button" onclick="removePhoto()">Odebrat fotografii</button>
- <p class="sub">Fotografie se zmenší na 320 × 320 px, uloží pouze do tohoto zařízení a zahrne do zálohy.</p>
  <label>Barva</label><div class="row" style="flex-wrap:wrap">${colorSet.map(c=>`<button class="small" style="background:${c};width:38px;height:38px;padding:0;border:2px solid ${(p?.color||colorSet[0])===c?'white':'transparent'}" onclick="document.getElementById('pColor').value='${c}'"></button>`).join('')}</div>
  <input id="pColor" type="color" value="${p?.color||colorSet[0]}">
  <button style="width:100%" onclick="savePartner()">Uložit učitele</button>`);
- workingPhoto=safePhoto(p?.photo);previewPhoto();
+ 
 }
 const criteriaGroups={
  hobbies:{list:'hobbyChips',input:'newHobby',empty:'Zatím žádné silné stránky.'},
@@ -270,7 +261,7 @@ function addCriterion(field){
 function removeCriterion(field,index){
  saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
 }
-function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,photo:workingPhoto};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
+function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,photo:p?.photo||''};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
 function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);save()}
 function openRecord(id,observation=false){
  currentRecordHobbies=[];

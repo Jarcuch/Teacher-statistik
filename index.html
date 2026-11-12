@@ -51,7 +51,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><h3>Hospitační záznamy</h3><div id="recentObservations"></div><h3 style="margin-top:16px">Kontrolní činnost</h3><div id="recentControls"></div></div>
  <button style="width:100%;background:#ffffff;color:#171322;border:1px solid #ffffff" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
  <button style="width:100%;margin-top:10px;background:#9ca3af;color:#171322;border:1px solid #9ca3af" onclick="openControlActivity()">＋ Kontrolní činnost</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T17:01:49.000Z">12. 11. 2026 18:01</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T17:19:05.000Z">12. 11. 2026 18:19</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -378,7 +378,8 @@ function exportRecordPdf(id){
  const printWindow=window.open('','_blank');
  if(!printWindow)return toast('Pro uložení PDF povolte vyskakovací okna.');
  const html=`<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Hospitační záznam – ${esc(teacherName)}</title><style>
- @page{size:A4;margin:18mm}*{box-sizing:border-box}body{font:12pt Arial,sans-serif;color:#111;margin:0;line-height:1.45}h1{text-align:center;font-size:18pt;margin:0 0 22px}h2{font-size:13pt;margin:18px 0 7px;border-bottom:1px solid #777;padding-bottom:3px}.info{margin-bottom:18px}.info-row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:4px 0}.info-row strong{font-weight:700}p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}ul{margin:6px 0 0;padding-left:22px}li{margin:3px 0;overflow-wrap:anywhere}.signatures{margin-top:28px;break-inside:avoid}.signature-row{margin-top:24px}.signature-line{display:inline-block;min-width:180px;border-bottom:1px solid #333;height:20px;margin:0 8px 0 5px}.sign-label{display:block;margin-bottom:4px}</style></head><body>
+ @page{size:A4;margin:18mm}*{box-sizing:border-box}body{font:12pt Arial,sans-serif;color:#111;margin:0;line-height:1.45}h1{text-align:center;font-size:18pt;margin:0 0 22px}h2{font-size:13pt;margin:18px 0 7px;border-bottom:1px solid #777;padding-bottom:3px}.info{margin-bottom:18px}.info-row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:4px 0}.info-row strong{font-weight:700}p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}ul{margin:6px 0 0;padding-left:22px}li{margin:3px 0;overflow-wrap:anywhere}.signatures{margin-top:28px;break-inside:avoid}.signature-row{margin-top:24px}.signature-line{display:inline-block;min-width:180px;border-bottom:1px solid #333;height:20px;margin:0 8px 0 5px}.sign-label{display:block;margin-bottom:4px}.screen-only{text-align:right;margin-bottom:14px}.screen-only button{padding:9px 14px;border:0;border-radius:8px;background:#26364c;color:#fff;font-size:14px;cursor:pointer}@media print{.screen-only{display:none}}</style></head><body>
+ <div class="screen-only"><button type="button" onclick="window.close()">Zavřít a zpět do aplikace</button></div>
  <h1>Hospitační záznam</h1><div class="info">${info}</div>
  ${listSection('Kladné hodnocení',record.hobbies)}
  ${listSection('Záporné hodnocení',record.flaws)}
@@ -390,6 +391,7 @@ function exportRecordPdf(id){
  <div class="signature-row"><span class="sign-label"><strong>Hospitoval/a:</strong></span><span>Jméno:<span class="signature-line"></span>Podpis:<span class="signature-line"></span></span></div></div>
  </body></html>`;
  printWindow.document.open();printWindow.document.write(html);printWindow.document.close();
+ printWindow.onafterprint=()=>printWindow.close();
  setTimeout(()=>{printWindow.focus();printWindow.print()},300);
 }
 function renderStats(){

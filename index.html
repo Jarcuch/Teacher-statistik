@@ -21,6 +21,7 @@ main{padding:0 16px;max-width:720px;margin:auto}.muted,.sub{color:var(--muted)}.
 button,.btn{border:0;border-radius:13px;background:var(--accent);color:#171322;padding:12px 15px;font-size:15px;font-weight:650;cursor:pointer}
 button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.danger{background:#542532;color:#ffdce2}
 button.small{padding:8px 11px;font-size:13px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.chip{background:#30394a;border-radius:20px;padding:7px 10px;font-size:13px}.chip button{background:transparent;color:#ff9aa9;padding:0 0 0 8px}.checks label{display:flex;gap:10px;align-items:center;background:#222a39;padding:10px;border-radius:10px;margin:7px 0}.checks input{width:auto;margin:0}.settings-select{margin-top:5px}.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}
+button.stats-tab{flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.stats-tab.active{background:var(--accent);color:#171322}
 input,select,textarea{width:100%;background:#111722;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:13px;font-size:16px;margin:5px 0 12px}
 label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
 nav{position:fixed;bottom:0;left:0;right:0;padding:9px 8px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#151b26;border-top:1px solid var(--line);z-index:5}
@@ -99,21 +100,35 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </section>
 <section id="stats" class="page hidden">
  <h2>Statistiky</h2>
- <div class="card">
-  <div class="row" style="flex-wrap:wrap">
-   <label><input type="checkbox" id="allTime" checked style="width:auto;margin-right:8px">Celé období</label>
-   <label><input type="checkbox" id="currentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+ <div class="actions stats-tabs"><button class="stats-tab active" data-stat-view="observation" onclick="showStatsView('observation')">Hospitační záznamy</button><button class="stats-tab" data-stat-view="control" onclick="showStatsView('control')">Kontrolní činnost</button></div>
+ <div id="observationStatsPanel">
+  <div class="card">
+   <div class="row" style="flex-wrap:wrap">
+    <label><input type="checkbox" id="allTime" checked style="width:auto;margin-right:8px">Celé období</label>
+    <label><input type="checkbox" id="currentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+   </div>
+   <div id="dateFilters" class="hidden"><label>Od</label><input type="date" id="fromDate"><label>Do</label><input type="date" id="toDate"></div>
   </div>
-  <div id="dateFilters" class="hidden">
-   <label>Od</label><input type="date" id="fromDate">
-   <label>Do</label><input type="date" id="toDate">
-  </div>
+  <div class="grid"><div class="card metric"><span>Záznamů ve výběru</span><strong id="filteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="activeCount">0</strong></div></div>
+  <div class="card"><h3>Podle učitelů</h3><div id="partnerStats"></div></div>
+  <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
+  <div class="card"><h3>Nejčastější kladné hodnocení</h3><div id="hobbyStats"></div></div>
+  <div class="card"><h3>Nejčastější záporné hodnocení</h3><div id="flawStats"></div></div>
  </div>
- <div class="grid"><div class="card metric"><span>Záznamů ve výběru</span><strong id="filteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="activeCount">0</strong></div></div>
- <div class="card"><h3>Podle učitelů</h3><div id="partnerStats"></div></div>
- <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
- <div class="card"><h3>Nejčastější kladné hodnocení</h3><div id="hobbyStats"></div></div>
- <div class="card"><h3>Nejčastější záporné hodnocení</h3><div id="flawStats"></div></div>
+ <div id="controlStatsPanel" class="hidden">
+  <div class="card">
+   <div class="row" style="flex-wrap:wrap">
+    <label><input type="checkbox" id="controlAllTime" checked style="width:auto;margin-right:8px">Celé období</label>
+    <label><input type="checkbox" id="controlCurrentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+   </div>
+   <div id="controlDateFilters" class="hidden"><label>Od</label><input type="date" id="controlFromDate"><label>Do</label><input type="date" id="controlToDate"></div>
+  </div>
+  <div class="grid"><div class="card metric"><span>Kontrolních činností ve výběru</span><strong id="controlFilteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="controlActiveCount">0</strong></div></div>
+  <div class="card"><h3>Podle učitelů</h3><div id="controlPartnerStats"></div></div>
+  <div class="card"><h3>Po měsících</h3><div id="controlMonthStats"></div></div>
+  <div class="card"><h3>Pozitivní kontrolní činnost</h3><div id="controlPositiveStats"></div></div>
+  <div class="card"><h3>Negativní kontrolní činnost</h3><div id="controlNegativeStats"></div></div>
+ </div>
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
@@ -226,6 +241,7 @@ function render(){
 
  renderCriteria();
  renderStats();
+ renderControlStats();
 }
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
 function closeModal(){$('modal').classList.add('hidden');currentRecordHobbies=[];currentRecordFlaws=[];currentControlPositive=[];currentControlNegative=[]}
@@ -363,6 +379,48 @@ function renderStats(){
  const tally=(field,target,color)=>{const c=Object.create(null);rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
  tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
 }
+function showStatsView(view){
+ const isControl=view==='control';
+ $('observationStatsPanel').classList.toggle('hidden',isControl);
+ $('controlStatsPanel').classList.toggle('hidden',!isControl);
+ document.querySelectorAll('[data-stat-view]').forEach(button=>button.classList.toggle('active',button.dataset.statView===view));
+ if(isControl)renderControlStats();else renderStats();
+}
+function renderControlStats(){
+ const all=$('controlAllTime').checked;
+ const currentMonth=$('controlCurrentMonth').checked;
+ $('controlDateFilters').classList.toggle('hidden',all||currentMonth);
+ let rows=db.controls;
+ if(currentMonth){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,1);
+  rows=rows.filter(record=>{const date=new Date(record.date);return date>=start&&date<end});
+ }else if(!all){
+  const from=$('controlFromDate').value?new Date($('controlFromDate').value+'T00:00:00'):new Date(0);
+  const to=$('controlToDate').value?new Date($('controlToDate').value+'T23:59:59.999'):new Date();
+  rows=rows.filter(record=>new Date(record.date)>=from&&new Date(record.date)<=to);
+ }
+ const counts=db.partners.map(partner=>({partner,count:rows.filter(record=>record.partnerId===partner.id).length})).filter(item=>item.count).sort((a,b)=>b.count-a.count||a.partner.name.localeCompare(b.partner.name,'cs'));
+ $('controlFilteredCount').textContent=rows.length;
+ $('controlActiveCount').textContent=counts.length;
+ const maxCount=Math.max(1,...counts.map(item=>item.count));
+ $('controlPartnerStats').innerHTML=counts.map(item=>`<div class="barline"><span>${esc(item.partner.name)}</span><div class="track"><div class="fill" style="width:${item.count/maxCount*100}%;background:${item.partner.color||'var(--accent)'}"></div></div><b>${item.count}</b></div>`).join('')||'<p class="sub">Žádná kontrolní činnost ve vybraném období.</p>';
+ const months={};
+ rows.forEach(record=>{const date=new Date(record.date);const key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');months[key]=(months[key]||0)+1});
+ const monthEntries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));
+ const maxMonth=Math.max(1,...monthEntries.map(item=>item[1]));
+ $('controlMonthStats').innerHTML=monthEntries.map(([key,count])=>`<div class="barline"><span>${key}</span><div class="track"><div class="fill" style="width:${count/maxMonth*100}%;background:var(--accent)"></div></div><b>${count}</b></div>`).join('')||'<p class="sub">Žádná kontrolní činnost ve vybraném období.</p>';
+ const tally=(field,target,color)=>{
+  const totals=Object.create(null);
+  rows.forEach(record=>(Array.isArray(record[field])?record[field]:[]).forEach(name=>{totals[name]=(totals[name]||0)+1}));
+  const entries=Object.entries(totals).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));
+  const max=Math.max(1,...entries.map(item=>item[1]));
+  $(target).innerHTML=entries.map(([name,count])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(name)}</span><div class="track"><div class="fill" style="width:${count/max*100}%;background:${color}"></div></div><b>${count}</b></div>`).join('')||'<p class="sub">Žádné úkony ve vybraném období.</p>';
+ };
+ tally('positive','controlPositiveStats','var(--accent)');
+ tally('negative','controlNegativeStats','#f28b82');
+}
 $('allTime').addEventListener('change',()=>{
  if($('allTime').checked)$('currentMonth').checked=false;
  renderStats();
@@ -372,6 +430,9 @@ $('currentMonth').addEventListener('change',()=>{
  renderStats();
 });
 $('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
+$('controlAllTime').addEventListener('change',()=>{if($('controlAllTime').checked)$('controlCurrentMonth').checked=false;renderControlStats()});
+$('controlCurrentMonth').addEventListener('change',()=>{if($('controlCurrentMonth').checked)$('controlAllTime').checked=false;renderControlStats()});
+$('controlFromDate').addEventListener('change',renderControlStats);$('controlToDate').addEventListener('change',renderControlStats);
 function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records)||(x.controls!==undefined&&!Array.isArray(x.controls)))throw Error();if(x.partners.length>10000||x.records.length>100000||(x.controls||[]).length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}for(const c of x.controls||[]){if(typeof c.id!=='string'||typeof c.partnerId!=='string'||typeof c.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Zálohu se nepodařilo uložit. Uvolněte místo v úložišti prohlížeče a zkuste to znovu.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();

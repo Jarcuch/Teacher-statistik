@@ -47,7 +47,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
   <div class="card metric"><span>Celkem záznamů</span><strong id="totalCount">0</strong></div>
   <div class="card metric"><span>Učitelů</span><strong id="partnerCount">0</strong></div>
  </div>
- <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
+ <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><h3>Hospitační záznamy</h3><div id="recentObservations"></div><h3 style="margin-top:16px">Kontrolní činnost</h3><div id="recentControls"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
  <button class="secondary" style="width:100%;margin-top:10px" onclick="openControlActivity()">＋ Kontrolní činnost</button>
  <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T15:03:28.000Z">12. 11. 2026 16:03</time></footer>
@@ -218,7 +218,8 @@ function avatar(teacher){
 function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
  $('totalCount').textContent=db.records.length+db.controls.length;$('partnerCount').textContent=db.partners.length;
- $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
+ $('recentObservations').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné hospitační záznamy.</p>';
+ $('recentControls').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(c=>rowControl(c)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';
  $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length+db.controls.filter(c=>c.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>rowRecord(r,true)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
  $('controlList').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(c=>rowControl(c,true)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';

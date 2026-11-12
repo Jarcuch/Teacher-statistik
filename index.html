@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:53:04.000Z">12. 11. 2026 15:53</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T15:03:28.000Z">12. 11. 2026 16:03</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -59,22 +59,20 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  <h2>Kritéria</h2>
  <div class="card">
   <h3>Hospitační záznam</h3>
-
- </div>
- <div class="card">
-  <h3>Silné stránky</h3>
-  <div id="hobbyChips" class="chips"></div>
-  <form class="row" onsubmit="event.preventDefault();addCriterion('hobbies')">
-   <input id="newHobby" aria-label="Nová silná stránka" placeholder="Nová silná stránka" style="margin:0">
-   <button type="submit" aria-label="Přidat silnou stránku">＋</button>
+  <p class="sub">Výchozích 22 kritérií je pevných. Můžeš přidat a odebrat vlastní kritéria.</p>
+  <h4>Kladné hodnocení</h4>
+  <div id="fixedObservationHobbies" class="chips"></div>
+  <div id="observationHobbyChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationHobbies')">
+   <input id="newObservationHobby" aria-label="Nové kladné kritérium" placeholder="Přidat kladné kritérium" style="margin:0">
+   <button type="submit" aria-label="Přidat kladné kritérium">＋</button>
   </form>
- </div>
- <div class="card">
-  <h3>Slabé stránky</h3>
-  <div id="flawChips" class="chips"></div>
-  <form class="row" onsubmit="event.preventDefault();addCriterion('flaws')">
-   <input id="newFlaw" aria-label="Nová slabá stránka" placeholder="Nová slabá stránka" style="margin:0">
-   <button type="submit" aria-label="Přidat slabou stránku">＋</button>
+  <h4>Záporné hodnocení</h4>
+  <div id="fixedObservationFlaws" class="chips"></div>
+  <div id="observationFlawChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationFlaws')">
+   <input id="newObservationFlaw" aria-label="Nové záporné kritérium" placeholder="Přidat záporné kritérium" style="margin:0">
+   <button type="submit" aria-label="Přidat záporné kritérium">＋</button>
   </form>
  </div>
 </section>
@@ -97,8 +95,8 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  <div class="grid"><div class="card metric"><span>Záznamů ve výběru</span><strong id="filteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="activeCount">0</strong></div></div>
  <div class="card"><h3>Podle učitelů</h3><div id="partnerStats"></div></div>
  <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
- <div class="card"><h3>Nejčastější silné stránky</h3><div id="hobbyStats"></div></div>
- <div class="card"><h3>Nejčastější slabé stránky</h3><div id="flawStats"></div></div>
+ <div class="card"><h3>Nejčastější kladné hodnocení</h3><div id="hobbyStats"></div></div>
+ <div class="card"><h3>Nejčastější záporné hodnocení</h3><div id="flawStats"></div></div>
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
@@ -171,8 +169,14 @@ function normalizeData({partners=[],records=[],criteria}={}){
    }
   }
   const observationField=field==='hobbies'?'observationHobbies':'observationFlaws';
-  sharedCriteria[field]=Array.isArray(criteria?.[observationField])?[...unique]:[];
-  sharedCriteria[observationField]=[...DEFAULT_CRITERIA[field]];
+  const fixedCriteria=DEFAULT_CRITERIA[field];
+  const fixedNames=new Set(fixedCriteria.map(name=>name.toLowerCase()));
+  const savedObservation=Array.isArray(criteria?.[observationField])?criteria[observationField]:[];
+  const additional=[...unique,...savedObservation].filter(value=>
+   typeof value==='string'&&value.trim()&&!fixedNames.has(value.trim().toLowerCase())
+  );
+  sharedCriteria[field]=[];
+  sharedCriteria[observationField]=[...fixedCriteria,...new Set(additional)];
  }
  return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,criteria:sharedCriteria};
 }
@@ -181,7 +185,7 @@ function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
 function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
 function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name):'Smazaný učitel'}
-function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Hospitační záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?(r.type==='observation'?' · Kladné hodnocení: ':' · Silné stránky: ')+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?(r.type==='observation'?' · Záporné hodnocení: ':' · Slabé stránky: ')+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
+function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Hospitační záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
  ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
@@ -212,14 +216,18 @@ function openPartner(id){
  
 }
 const criteriaGroups={
- hobbies:{list:'hobbyChips',input:'newHobby',empty:'Zatím žádné silné stránky.'},
- flaws:{list:'flawChips',input:'newFlaw',empty:'Zatím žádné slabé stránky.'},
+ observationHobbies:{list:'observationHobbyChips',input:'newObservationHobby',fixed:'fixedObservationHobbies',defaults:'hobbies'},
+ observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',fixed:'fixedObservationFlaws',defaults:'flaws'}
 };
 function renderCriteria(){
- for(const [field,{list,empty}] of Object.entries(criteriaGroups)){
-  $(list).innerHTML=db.criteria[field].map((name,index)=>
-   `<span class="chip">${esc(name)} <button type="button" onclick="removeCriterion('${field}',${index})" aria-label="Odebrat ${esc(name)}">×</button></span>`
-  ).join('')||`<span class="sub">${empty}</span>`;
+ for(const [field,group] of Object.entries(criteriaGroups)){
+  const fixed=DEFAULT_CRITERIA[group.defaults];
+  const fixedNames=new Set(fixed.map(name=>name.toLowerCase()));
+  $(group.fixed).innerHTML=fixed.map(name=>`<span class="chip">${esc(name)}</span>`).join('');
+  $(group.list).innerHTML=db.criteria[field].map((name,index)=>({name,index}))
+   .filter(item=>!fixedNames.has(item.name.toLowerCase()))
+   .map(item=>`<span class="chip">${esc(item.name)} <button type="button" onclick="removeCriterion('${field}',${item.index})" aria-label="Odebrat ${esc(item.name)}">×</button></span>`)
+   .join('');
  }
 }
 function saveCriteria(field,values){
@@ -238,6 +246,9 @@ function addCriterion(field){
  if(saveCriteria(field,[...db.criteria[field],name]))input.value='';
 }
 function removeCriterion(field,index){
+ const defaults=DEFAULT_CRITERIA[criteriaGroups[field].defaults];
+ const fixedNames=new Set(defaults.map(name=>name.toLowerCase()));
+ if(fixedNames.has(db.criteria[field][index]?.toLowerCase()))return;
  saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
 }
 function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
@@ -247,14 +258,14 @@ function openRecord(id,observation=false){
  currentRecordFlaws=[];
  if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
  const r=db.records.find(x=>x.id===id);editing=id||null;
- const isObservation=r?r.type==='observation':observation;
+ const isObservation=Boolean(r)||observation;
  modalKind=isObservation?'observation':'record';const d=r?new Date(r.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
  openModal(isObservation?(r?'Upravit hospitační záznam':'Nový hospitační záznam'):(r?'Upravit záznam':'Nový záznam'),`
  <label>Učitel</label><select id="rPartner">${sortedTeachers().map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
  <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
  <label for="rTopic">Téma hodiny (nepovinné)</label><input id="rTopic" value="${esc(r?.topic||'')}" placeholder="Téma hodiny">
- <label>${isObservation?'Kladné hodnocení':'Silné stránky'} (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
- <label>${isObservation?'Záporné hodnocení':'Slabé stránky'} (lze vybrat více)</label><div id="recordFlawChecks" class="checks"></div>
+ <label>Kladné hodnocení (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
+ <label>Záporné hodnocení (lze vybrat více)</label><div id="recordFlawChecks" class="checks"></div>
  ${isObservation?`
  <label for="rProgress">Průběh hodiny</label><textarea id="rProgress" rows="3" maxlength="10000">${esc(r?.progress||'')}</textarea>
  <label for="rRecommendations">Doporučení</label><textarea id="rRecommendations" rows="3" maxlength="10000">${esc(r?.recommendations||'')}</textarea>`:''}

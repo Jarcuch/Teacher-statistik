@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:32:50.000Z">12. 11. 2026 15:32</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:42:45.000Z">12. 11. 2026 15:42</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -120,7 +120,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
- <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, fotografie, silné stránky, slabé stránky, poznámky a záznamy. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+ <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky a záznamy. Fotografie se neukládají. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
  <div class="card"><h3>Soukromí</h3><p class="sub">Údaje se ukládají v prohlížeči na tomto zařízení. Pravidelně exportujte zálohu.</p></div>
 </section>
 </main>
@@ -196,7 +196,7 @@ function normalizeData({partners=[],records=[],criteria}={}){
    ?[...new Set(observationItems.filter(value=>typeof value==='string'&&value.trim()))]
    :[...unique];
  }
- return {partners:partners.map(({hobbies,flaws,...teacher})=>teacher),records,criteria:sharedCriteria};
+ return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,criteria:sharedCriteria};
 }
 function load(){try{db=normalizeData(JSON.parse(localStorage.getItem(KEY))||undefined)}catch{db=normalizeData()}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
@@ -334,7 +334,7 @@ $('currentMonth').addEventListener('change',()=>{
 });
 $('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
 function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
-$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();if(p.photo&&!safePhoto(p.photo))throw Error()}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Import selhal: úložiště je plné.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Zálohu se nepodařilo uložit. Uvolněte místo v úložišti prohlížeče a zkuste to znovu.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();
 $('today').textContent=new Date().toLocaleDateString('cs-CZ',{dateStyle:'full'});
 render();

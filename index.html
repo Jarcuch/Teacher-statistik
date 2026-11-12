@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:31:52.000Z">12. 11. 2026 15:31</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:32:50.000Z">12. 11. 2026 15:32</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -117,7 +117,6 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
  <div class="card"><h3>Nejčastější silné stránky</h3><div id="hobbyStats"></div></div>
  <div class="card"><h3>Nejčastější slabé stránky</h3><div id="flawStats"></div></div>
- <div class="card" id="topPartner"></div>
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
@@ -324,7 +323,6 @@ function renderStats(){
  $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:var(--accent)"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
  const tally=(field,target,color)=>{const c=Object.create(null);rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
  tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
- $('topPartner').innerHTML=counts.length?`<b>Nejčastější učitel:</b><p>${esc(counts[0].p.name)} · ${counts[0].n} záznamů</p>`:'<p class="sub">Zatím bez statistiky.</p>';
 }
 $('allTime').addEventListener('change',()=>{
  if($('allTime').checked)$('currentMonth').checked=false;

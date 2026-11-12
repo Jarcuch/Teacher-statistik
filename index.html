@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:42:45.000Z">12. 11. 2026 15:42</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:49:11.000Z">12. 11. 2026 15:49</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -59,25 +59,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  <h2>Kritéria</h2>
  <div class="card">
   <h3>Hospitační záznam</h3>
-  <details>
-   <summary>Kritéria hospitace</summary>
- <div class="card">
-  <h4>Kladné hodnocení</h4>
-  <div id="observationHobbyChips" class="chips"></div>
-  <form class="row" onsubmit="event.preventDefault();addCriterion('observationHobbies')">
-   <input id="newObservationHobby" aria-label="Nové kladné kritérium" placeholder="Nové kladné kritérium" style="margin:0">
-   <button type="submit" aria-label="Přidat kladné kritérium">＋</button>
-  </form>
- </div>
- <div class="card">
-  <h4>Záporné hodnocení</h4>
-  <div id="observationFlawChips" class="chips"></div>
-  <form class="row" onsubmit="event.preventDefault();addCriterion('observationFlaws')">
-   <input id="newObservationFlaw" aria-label="Nové záporné kritérium" placeholder="Nové záporné kritérium" style="margin:0">
-   <button type="submit" aria-label="Přidat záporné kritérium">＋</button>
-  </form>
- </div>
-  </details>
+
  </div>
  <div class="card">
   <h3>Silné stránky</h3>
@@ -189,12 +171,8 @@ function normalizeData({partners=[],records=[],criteria}={}){
    }
   }
   const observationField=field==='hobbies'?'observationHobbies':'observationFlaws';
-  const observationItems=criteria?.[observationField];
-  const hasObservationList=Array.isArray(observationItems);
-  sharedCriteria[field]=hasObservationList?[...unique]:[];
-  sharedCriteria[observationField]=hasObservationList
-   ?[...new Set(observationItems.filter(value=>typeof value==='string'&&value.trim()))]
-   :[...unique];
+  sharedCriteria[field]=Array.isArray(criteria?.[observationField])?[...unique]:[];
+  sharedCriteria[observationField]=[...DEFAULT_CRITERIA[field]];
  }
  return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,criteria:sharedCriteria};
 }
@@ -232,8 +210,6 @@ function openPartner(id){
 const criteriaGroups={
  hobbies:{list:'hobbyChips',input:'newHobby',empty:'Zatím žádné silné stránky.'},
  flaws:{list:'flawChips',input:'newFlaw',empty:'Zatím žádné slabé stránky.'},
- observationHobbies:{list:'observationHobbyChips',input:'newObservationHobby',empty:'Zatím žádná kladná kritéria.'},
- observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',empty:'Zatím žádná záporná kritéria.'}
 };
 function renderCriteria(){
  for(const [field,{list,empty}] of Object.entries(criteriaGroups)){

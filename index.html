@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:30:48.000Z">12. 11. 2026 15:30</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:31:52.000Z">12. 11. 2026 15:31</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -176,7 +176,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
-const colorSet=['#ffffff','#ec6b91','#36b8a4','#4d9be8','#e69b45','#e45e61','#7dba65','#ba83d8'];
+const colorSet=['#ffffff','#f3f4f6','#94a3b8','#64748b','#334155','#1f2937','#f87171','#ef4444','#b91c1c','#fb923c','#f97316','#c2410c','#fbbf24','#eab308','#a16207','#4ade80','#22c55e','#15803d','#2dd4bf','#14b8a6','#0f766e','#60a5fa','#3b82f6','#1d4ed8','#a78bfa','#8b5cf6','#6d28d9','#f472b6','#ec4899','#be185d'];
 function normalizeData({partners=[],records=[],criteria}={}){
  const sharedCriteria={defaultsAdded:true};
  for(const field of ['hobbies','flaws']){
@@ -225,7 +225,7 @@ function openPartner(id){
  openModal(p?'Upravit učitele':'Nový učitel',`
  <label>Jméno</label><input id="pName" value="${esc(p?.name||'')}" placeholder="Jméno">
  <label>Učebna (nepovinné)</label><input id="pNick" value="${esc(p?.nickname||'')}" placeholder="Učebna">
- <label>Barva</label><div class="row" style="flex-wrap:wrap">${colorSet.map(c=>`<button class="small" style="background:${c};width:38px;height:38px;padding:0;border:2px solid ${(p?.color||colorSet[0])===c?'white':'transparent'}" onclick="document.getElementById('pColor').value='${c}'"></button>`).join('')}</div>
+ <label>Barva</label><div class="row" style="flex-wrap:wrap">${colorSet.map(c=>`<button class="small" title="Barva ${c}" aria-label="Barva ${c}" style="background:${c};width:38px;height:38px;padding:0;border:2px solid ${(p?.color||colorSet[0])===c?'white':'transparent'}" onclick="document.getElementById('pColor').value='${c}'"></button>`).join('')}</div>
  <input id="pColor" type="color" value="${p?.color||colorSet[0]}">
  <button style="width:100%" onclick="savePartner()">Uložit učitele</button>`);
  

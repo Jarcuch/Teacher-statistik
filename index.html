@@ -49,6 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
+ <button class="secondary" style="width:100%;margin-top:10px" onclick="openControlActivity()">＋ Kontrolní činnost</button>
  <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T15:03:28.000Z">12. 11. 2026 16:03</time></footer>
 </section>
 <section id="partners" class="page hidden">
@@ -75,10 +76,26 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
    <button type="submit" aria-label="Přidat záporné kritérium">＋</button>
   </form>
  </div>
+ <div class="card">
+  <h3>Kontrolní úkony</h3>
+  <h4>Pozitivní</h4>
+  <div id="controlPositiveChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('controlPositive')">
+   <input id="newControlPositive" aria-label="Nový pozitivní kontrolní úkon" placeholder="Přidat pozitivní kontrolní úkon" style="margin:0">
+   <button type="submit" aria-label="Přidat pozitivní kontrolní úkon">＋</button>
+  </form>
+  <h4>Negativní</h4>
+  <div id="controlNegativeChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('controlNegative')">
+   <input id="newControlNegative" aria-label="Nový negativní kontrolní úkon" placeholder="Přidat negativní kontrolní úkon" style="margin:0">
+   <button type="submit" aria-label="Přidat negativní kontrolní úkon">＋</button>
+  </form>
+ </div>
 </section>
 <section id="records" class="page hidden">
  <h2>Záznamy</h2>
  <div class="card" id="recordList"></div>
+ <div class="card"><h3>Kontrolní činnost</h3><div id="controlList"></div></div>
 </section>
 <section id="stats" class="page hidden">
  <h2>Statistiky</h2>
@@ -100,7 +117,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
- <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky a záznamy. Fotografie se neukládají. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+ <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky, hospitační záznamy a kontrolní činnost. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
  <div class="card"><h3>Soukromí</h3><p class="sub">Údaje se ukládají v prohlížeči na tomto zařízení. Pravidelně exportujte zálohu.</p></div>
 </section>
 </main>
@@ -150,13 +167,13 @@ const DEFAULT_CRITERIA={
   "Hodina končí bez ověření, zda žáci cíle dosáhli"
  ]
 };
-let db=normalizeData(), editing=null, modalKind='', currentRecordHobbies=[], currentRecordFlaws=[];
+let db=normalizeData(), editing=null, modalKind='', currentRecordHobbies=[], currentRecordFlaws=[], currentControlPositive=[], currentControlNegative=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>crypto.randomUUID();
 const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
 const colorSet=['#ffffff','#f3f4f6','#94a3b8','#64748b','#334155','#1f2937','#f87171','#ef4444','#b91c1c','#fb923c','#f97316','#c2410c','#fbbf24','#eab308','#a16207','#4ade80','#22c55e','#15803d','#2dd4bf','#14b8a6','#0f766e','#60a5fa','#3b82f6','#1d4ed8','#a78bfa','#8b5cf6','#6d28d9','#f472b6','#ec4899','#be185d'];
-function normalizeData({partners=[],records=[],criteria}={}){
+function normalizeData({partners=[],records=[],controls=[],criteria}={}){
  const sharedCriteria={defaultsAdded:true};
  for(const field of ['hobbies','flaws']){
   const items=criteria?.[field];
@@ -178,7 +195,11 @@ function normalizeData({partners=[],records=[],criteria}={}){
   sharedCriteria[field]=[];
   sharedCriteria[observationField]=[...fixedCriteria,...new Set(additional)];
  }
- return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,criteria:sharedCriteria};
+ for(const field of ['controlPositive','controlNegative']){
+  const values=Array.isArray(criteria?.[field])?criteria[field]:[];
+  sharedCriteria[field]=[...new Set(values.filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()))];
+ }
+ return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,controls:Array.isArray(controls)?controls:[],criteria:sharedCriteria};
 }
 function load(){try{db=normalizeData(JSON.parse(localStorage.getItem(KEY))||undefined)}catch{db=normalizeData()}}
 function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
@@ -188,6 +209,7 @@ function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name
 function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Hospitační záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
  ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button>`:''}</div>`}
+function rowControl(c,editable=false){const p=db.partners.find(x=>x.id===c.partnerId);const parts=[];if(c.positive?.length)parts.push('Pozitivní: '+c.positive.join(', '));if(c.negative?.length)parts.push('Negativní: '+c.negative.join(', '));return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(c.date))}${parts.length?' · '+esc(parts.join(' · ')):' · Bez vybraných úkonů'}</small></div>${editable?`<button class="small secondary" onclick="openControlActivity('${c.id}')">Upravit</button><button class="small danger" onclick="deleteControlActivity('${c.id}')">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
 function avatar(teacher){
  const initial=teacher.name.trim().charAt(0).toLocaleUpperCase('cs-CZ')||'?';
@@ -195,16 +217,17 @@ function avatar(teacher){
 }
 function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
- $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
+ $('totalCount').textContent=db.records.length+db.controls.length;$('partnerCount').textContent=db.partners.length;
  $('recent').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
- $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
+ $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length+db.controls.filter(c=>c.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>rowRecord(r,true)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
+ $('controlList').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(c=>rowControl(c,true)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';
 
  renderCriteria();
  renderStats();
 }
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
-function closeModal(){$('modal').classList.add('hidden');currentRecordHobbies=[];currentRecordFlaws=[]}
+function closeModal(){$('modal').classList.add('hidden');currentRecordHobbies=[];currentRecordFlaws=[];currentControlPositive=[];currentControlNegative=[]}
 function openPartner(id){
  const p=db.partners.find(x=>x.id===id);editing=id||null;modalKind='partner';
  openModal(p?'Upravit učitele':'Nový učitel',`
@@ -217,17 +240,19 @@ function openPartner(id){
 }
 const criteriaGroups={
  observationHobbies:{list:'observationHobbyChips',input:'newObservationHobby',fixed:'fixedObservationHobbies',defaults:'hobbies'},
- observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',fixed:'fixedObservationFlaws',defaults:'flaws'}
+ observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',fixed:'fixedObservationFlaws',defaults:'flaws'},
+ controlPositive:{list:'controlPositiveChips',input:'newControlPositive'},
+ controlNegative:{list:'controlNegativeChips',input:'newControlNegative'}
 };
 function renderCriteria(){
  for(const [field,group] of Object.entries(criteriaGroups)){
-  const fixed=DEFAULT_CRITERIA[group.defaults];
+  const fixed=group.defaults?DEFAULT_CRITERIA[group.defaults]:[];
   const fixedNames=new Set(fixed.map(name=>name.toLowerCase()));
-  $(group.fixed).innerHTML=fixed.map(name=>`<span class="chip">${esc(name)}</span>`).join('');
+  if(group.fixed)$(group.fixed).innerHTML=fixed.map(name=>`<span class="chip">${esc(name)}</span>`).join('');
   $(group.list).innerHTML=db.criteria[field].map((name,index)=>({name,index}))
    .filter(item=>!fixedNames.has(item.name.toLowerCase()))
    .map(item=>`<span class="chip">${esc(item.name)} <button type="button" onclick="removeCriterion('${field}',${item.index})" aria-label="Odebrat ${esc(item.name)}">×</button></span>`)
-   .join('');
+   .join('')||(!group.defaults?'<span class="sub">Zatím žádné úkony.</span>':'');
  }
 }
 function saveCriteria(field,values){
@@ -246,13 +271,13 @@ function addCriterion(field){
  if(saveCriteria(field,[...db.criteria[field],name]))input.value='';
 }
 function removeCriterion(field,index){
- const defaults=DEFAULT_CRITERIA[criteriaGroups[field].defaults];
+ const defaults=DEFAULT_CRITERIA[criteriaGroups[field].defaults]||[];
  const fixedNames=new Set(defaults.map(name=>name.toLowerCase()));
  if(fixedNames.has(db.criteria[field][index]?.toLowerCase()))return;
  saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
 }
 function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
-function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);save()}
+function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);db.controls=db.controls.filter(x=>x.partnerId!==id);save()}
 function openRecord(id,observation=false){
  currentRecordHobbies=[];
  currentRecordFlaws=[];
@@ -276,6 +301,28 @@ function openRecord(id,observation=false){
  renderRecordCriteria(isObservation?'observationHobbies':'hobbies','recordHobbyChecks',currentRecordHobbies,values=>{currentRecordHobbies=values});
  renderRecordCriteria(isObservation?'observationFlaws':'flaws','recordFlawChecks',currentRecordFlaws,values=>{currentRecordFlaws=values});
 }
+function openControlActivity(id){
+ if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
+ const c=db.controls.find(x=>x.id===id);editing=id||null;modalKind='control';
+ const d=c?new Date(c.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+ openModal(c?'Upravit kontrolní činnost':'Nová kontrolní činnost',`
+ <label>Učitel</label><select id="cPartner">${sortedTeachers().map(p=>`<option value="${p.id}" ${p.id===c?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+ <label>Datum a čas</label><input id="cDate" type="datetime-local" value="${local}">
+ <h3>Pozitivní kontrolní úkony</h3><div id="controlPositiveChecks" class="checks"></div>
+ <h3>Negativní kontrolní úkony</h3><div id="controlNegativeChecks" class="checks"></div>
+ <button style="width:100%" onclick="saveControlActivity()">Uložit kontrolní činnost</button>`);
+ currentControlPositive=Array.isArray(c?.positive)?[...c.positive]:[];
+ currentControlNegative=Array.isArray(c?.negative)?[...c.negative]:[];
+ renderRecordCriteria('controlPositive','controlPositiveChecks',currentControlPositive,values=>{currentControlPositive=values});
+ renderRecordCriteria('controlNegative','controlNegativeChecks',currentControlNegative,values=>{currentControlNegative=values});
+}
+function saveControlActivity(){
+ const date=new Date($('cDate').value);if(!Number.isFinite(date.getTime()))return toast('Zkontrolujte datum a čas.');
+ const item={id:editing||uid(),partnerId:$('cPartner').value,date:date.toISOString(),positive:[...currentControlPositive],negative:[...currentControlNegative]};
+ if(editing)db.controls=db.controls.map(c=>c.id===editing?item:c);else db.controls.push(item);
+ closeModal();save();toast('Kontrolní činnost uložena.');
+}
+function deleteControlActivity(id){if(!confirm('Opravdu chcete tuto kontrolní činnost smazat?'))return;db.controls=db.controls.filter(c=>c.id!==id);save()}
 function renderRecordCriteria(field,target,selected,onChange){
  const active=db.criteria[field];
  const options=[...new Set([...active,...selected])];
@@ -325,10 +372,11 @@ $('currentMonth').addEventListener('change',()=>{
 });
 $('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
 function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
-$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records))throw Error();if(x.partners.length>10000||x.records.length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Zálohu se nepodařilo uložit. Uvolněte místo v úložišti prohlížeče a zkuste to znovu.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records)||(x.controls!==undefined&&!Array.isArray(x.controls)))throw Error();if(x.partners.length>10000||x.records.length>100000||(x.controls||[]).length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}for(const c of x.controls||[]){if(typeof c.id!=='string'||typeof c.partnerId!=='string'||typeof c.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Zálohu se nepodařilo uložit. Uvolněte místo v úložišti prohlížeče a zkuste to znovu.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();
 $('today').textContent=new Date().toLocaleDateString('cs-CZ',{dateStyle:'full'});
 render();
 if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body></html>
+

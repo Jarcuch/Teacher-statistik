@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:49:11.000Z">12. 11. 2026 15:49</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:53:04.000Z">12. 11. 2026 15:53</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -185,6 +185,10 @@ function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partne
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
  ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
+function avatar(teacher){
+ const initial=teacher.name.trim().charAt(0).toLocaleUpperCase('cs-CZ')||'?';
+ return `<div class="avatar" style="background:${esc(teacher.color||'#64748b')}">${esc(initial)}</div>`;
+}
 function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
  $('totalCount').textContent=db.records.length;$('partnerCount').textContent=db.partners.length;
@@ -236,7 +240,7 @@ function addCriterion(field){
 function removeCriterion(field,index){
  saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
 }
-function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,photo:p?.photo||''};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
+function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
 function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);save()}
 function openRecord(id,observation=false){
  currentRecordHobbies=[];

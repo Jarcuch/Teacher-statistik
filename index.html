@@ -49,7 +49,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
  </div>
  <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><div id="recent"></div></div>
  <button style="width:100%" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-11T22:02:16.000Z">11. 11. 2026 23:02</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T14:28:44.000Z">12. 11. 2026 15:28</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -224,7 +224,7 @@ function render(){
  renderStats();
 }
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
-function closeModal(){$('modal').classList.add('hidden')}
+function closeModal(){$('modal').classList.add('hidden');currentRecordHobbies=[];currentRecordFlaws=[]}
 function openPartner(id){
  const p=db.partners.find(x=>x.id===id);editing=id||null;modalKind='partner';
  openModal(p?'Upravit učitele':'Nový učitel',`
@@ -273,6 +273,8 @@ function removeCriterion(field,index){
 function savePartner(){const name=$('pName').value.trim();if(!name)return toast('Vyplňte jméno.');const item={id:editing||uid(),name,nickname:$('pNick').value.trim(),color:$('pColor').value,photo:workingPhoto};if(editing)db.partners=db.partners.map(p=>p.id===editing?item:p);else db.partners.push(item);closeModal();try{save();toast('Učitel uložen.')}catch(e){toast('Úložiště je plné. Zkus menší počet fotografií.');}}
 function deletePartner(id){const p=db.partners.find(x=>x.id===id);if(!confirm(`Smazat učitele ${p.name} a všechny jeho záznamy?`))return;db.partners=db.partners.filter(x=>x.id!==id);db.records=db.records.filter(x=>x.partnerId!==id);save()}
 function openRecord(id,observation=false){
+ currentRecordHobbies=[];
+ currentRecordFlaws=[];
  if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
  const r=db.records.find(x=>x.id===id);editing=id||null;
  const isObservation=r?r.type==='observation':observation;

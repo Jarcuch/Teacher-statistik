@@ -48,10 +48,10 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
   <div class="card metric"><span>Celkem záznamů</span><strong id="totalCount">0</strong></div>
   <div class="card metric"><span>Učitelů</span><strong id="partnerCount">0</strong></div>
  </div>
- <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><h3>Hospitační záznamy</h3><div id="recentObservations"></div><h3 style="margin-top:16px">Kontrolní činnost</h3><div id="recentControls"></div></div>
- <button style="width:100%;background:#ffffff;color:#171322;border:1px solid #ffffff" onclick="openRecord(undefined,true)">＋ Přidat hospitační záznam</button>
+ <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><h3>Náslechové záznamy</h3><div id="recentObservations"></div><h3 style="margin-top:16px">Kontrolní činnost</h3><div id="recentControls"></div></div>
+ <button style="width:100%;background:#ffffff;color:#171322;border:1px solid #ffffff" onclick="openRecord(undefined,true)">＋ Přidat náslechový záznam</button>
  <button style="width:100%;margin-top:10px;background:#9ca3af;color:#171322;border:1px solid #9ca3af" onclick="openControlActivity()">＋ Kontrolní činnost</button>
- <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T17:19:05.000Z">12. 11. 2026 18:19</time></footer>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-12T20:32:33.000Z">12. 11. 2026 21:32</time></footer>
 </section>
 <section id="partners" class="page hidden">
  <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
@@ -60,7 +60,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 <section id="criteria" class="page hidden">
  <h2>Kritéria</h2>
  <div class="card">
-  <h3>Hospitační záznam</h3>
+  <h3>Náslechový záznam</h3>
   <p class="sub">Výchozích 22 kritérií je pevných. Můžeš přidat a odebrat vlastní kritéria.</p>
   <h4>Kladné hodnocení</h4>
   <div id="fixedObservationHobbies" class="chips"></div>
@@ -95,12 +95,12 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </section>
 <section id="records" class="page hidden">
  <h2>Záznamy</h2>
- <div class="card"><h3>Hospitační záznam</h3><div id="recordList"></div></div>
+ <div class="card"><h3>Náslechový záznam</h3><div id="recordList"></div></div>
  <div class="card"><h3>Kontrolní činnost</h3><div id="controlList"></div></div>
 </section>
 <section id="stats" class="page hidden">
  <h2>Statistiky</h2>
- <div class="actions stats-tabs"><button class="stats-tab active" data-stat-view="observation" onclick="showStatsView('observation')">Hospitační záznamy</button><button class="stats-tab" data-stat-view="control" onclick="showStatsView('control')">Kontrolní činnost</button></div>
+ <div class="actions stats-tabs"><button class="stats-tab active" data-stat-view="observation" onclick="showStatsView('observation')">Náslechové záznamy</button><button class="stats-tab" data-stat-view="control" onclick="showStatsView('control')">Kontrolní činnost</button></div>
  <div id="observationStatsPanel">
   <div class="card">
    <div class="row" style="flex-wrap:wrap">
@@ -132,7 +132,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </section>
 <section id="settings" class="page hidden">
  <h2>Nastavení a data</h2>
- <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky, hospitační záznamy a kontrolní činnost. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+ <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky, náslechové záznamy a kontrolní činnost. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
  <div class="card"><h3>Soukromí</h3><p class="sub">Údaje se ukládají v prohlížeči na tomto zařízení. Pravidelně exportujte zálohu.</p></div>
 </section>
 </main>
@@ -221,9 +221,9 @@ function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
 function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
 function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
 function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name):'Smazaný učitel'}
-function rowRecord(r,editable=false,pdf=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Hospitační záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
+function rowRecord(r,editable=false,pdf=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Náslechový záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
- ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${pdf?`<button class="small secondary icon-button" title="Uložit jako PDF" aria-label="Uložit hospitační záznam jako PDF" onclick="exportRecordPdf('${r.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/><path d="M18 12h.01"/></svg></button>`:''}${editable?`<button class="small secondary icon-button" title="Upravit" aria-label="Upravit hospitační záznam" onclick="openRecord('${r.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4"/><path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/><path d="M4 20h5"/></svg></button><button class="small danger" onclick="deleteRecord('${r.id}')" title="Smazat" aria-label="Smazat hospitační záznam">×</button>`:''}</div>`}
+ ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${pdf?`<button class="small secondary icon-button" title="Uložit jako PDF" aria-label="Uložit náslechový záznam jako PDF" onclick="exportRecordPdf('${r.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/><path d="M18 12h.01"/></svg></button>`:''}${editable?`<button class="small secondary icon-button" title="Upravit" aria-label="Upravit náslechový záznam" onclick="openRecord('${r.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4"/><path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/><path d="M4 20h5"/></svg></button><button class="small danger" onclick="deleteRecord('${r.id}')" title="Smazat" aria-label="Smazat náslechový záznam">×</button>`:''}</div>`}
 function rowControl(c,editable=false){const p=db.partners.find(x=>x.id===c.partnerId);const parts=[];if(c.positive?.length)parts.push('Pozitivní: '+c.positive.join(', '));if(c.negative?.length)parts.push('Negativní: '+c.negative.join(', '));return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(c.date))}${parts.length?' · '+esc(parts.join(' · ')):' · Bez vybraných úkonů'}</small>${c.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(c.note)}</div>`:''}</div>${editable?`<button class="small secondary icon-button" title="Upravit" aria-label="Upravit kontrolní činnost" onclick="openControlActivity('${c.id}')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4"/><path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/><path d="M4 20h5"/></svg></button><button class="small danger" onclick="deleteControlActivity('${c.id}')" title="Smazat" aria-label="Smazat kontrolní činnost">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
 function avatar(teacher){
@@ -233,7 +233,7 @@ function avatar(teacher){
 function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
 function render(){
  $('totalCount').textContent=db.records.length+db.controls.length;$('partnerCount').textContent=db.partners.length;
- $('recentObservations').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné hospitační záznamy.</p>';
+ $('recentObservations').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné náslechové záznamy.</p>';
  $('recentControls').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(c=>rowControl(c)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';
  $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length+db.controls.filter(c=>c.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner('${p.id}')">Upravit</button><button class="small danger" onclick="deletePartner('${p.id}')">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
  $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>rowRecord(r,true,true)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
@@ -302,7 +302,7 @@ function openRecord(id,observation=false){
  const r=db.records.find(x=>x.id===id);editing=id||null;
  const isObservation=Boolean(r)||observation;
  modalKind=isObservation?'observation':'record';const d=r?new Date(r.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
- openModal(isObservation?(r?'Upravit hospitační záznam':'Nový hospitační záznam'):(r?'Upravit záznam':'Nový záznam'),`
+ openModal(isObservation?(r?'Upravit náslechový záznam':'Nový náslechový záznam'):(r?'Upravit záznam':'Nový záznam'),`
  <label>Učitel</label><select id="rPartner">${r?'':'<option value="" selected disabled>Vyberte učitele</option>'}${sortedTeachers().map(p=>`<option value="${p.id}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
  <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
  <label for="rTopic">Téma hodiny (nepovinné)</label><input id="rTopic" value="${esc(r?.topic||'')}" placeholder="Téma hodiny">
@@ -364,7 +364,7 @@ function saveRecord(){if(!$('rPartner').value)return toast('Vyberte učitele.');
 function deleteRecord(id){if(!confirm('Opravdu chcete tento záznam smazat?'))return;db.records=db.records.filter(r=>r.id!==id);save()}
 function exportRecordPdf(id){
  const record=db.records.find(item=>item.id===id);
- if(!record)return toast('Hospitační záznam nebyl nalezen.');
+ if(!record)return toast('Náslechový záznam nebyl nalezen.');
  const teacher=db.partners.find(item=>item.id===record.partnerId);
  const teacherName=teacher?.name||'Neznámý učitel';
  const listSection=(title,values)=>Array.isArray(values)&&values.length?`<section><h2>${esc(title)}</h2><ul>${values.map(value=>`<li>${esc(value)}</li>`).join('')}</ul></section>`:'';
@@ -377,10 +377,12 @@ function exportRecordPdf(id){
  ].map(([label,value])=>`<div class="info-row"><strong>${esc(label)}</strong><span>${esc(value)}</span></div>`).join('');
  const printWindow=window.open('','_blank');
  if(!printWindow)return toast('Pro uložení PDF povolte vyskakovací okna.');
- const html=`<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Hospitační záznam – ${esc(teacherName)}</title><style>
+
+ const html=`<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Náslechový záznam – ${esc(teacherName)}</title><style>
  @page{size:A4;margin:18mm}*{box-sizing:border-box}body{font:12pt Arial,sans-serif;color:#111;margin:0;line-height:1.45}h1{text-align:center;font-size:18pt;margin:0 0 22px}h2{font-size:13pt;margin:18px 0 7px;border-bottom:1px solid #777;padding-bottom:3px}.info{margin-bottom:18px}.info-row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:4px 0}.info-row strong{font-weight:700}p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}ul{margin:6px 0 0;padding-left:22px}li{margin:3px 0;overflow-wrap:anywhere}.signatures{margin-top:28px;break-inside:avoid}.signature-row{margin-top:24px}.signature-line{display:inline-block;min-width:180px;border-bottom:1px solid #333;height:20px;margin:0 8px 0 5px}.sign-label{display:block;margin-bottom:4px}.screen-only{text-align:right;margin-bottom:14px}.screen-only button{padding:9px 14px;border:0;border-radius:8px;background:#26364c;color:#fff;font-size:14px;cursor:pointer}@media print{.screen-only{display:none}}</style></head><body>
  <div class="screen-only"><button type="button" onclick="window.close()">Zavřít a zpět do aplikace</button></div>
- <h1>Hospitační záznam</h1><div class="info">${info}</div>
+
+ <h1>Náslechový záznam</h1><div class="info">${info}</div>
  ${listSection('Kladné hodnocení',record.hobbies)}
  ${listSection('Záporné hodnocení',record.flaws)}
  ${textSection('Průběh hodiny',record.progress||'')}

@@ -224,7 +224,7 @@ function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name
 function rowRecord(r,editable=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Hospitační záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
  ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
  ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openRecord('${r.id}')">Upravit</button><button class="small danger" onclick="deleteRecord('${r.id}')">×</button>`:''}</div>`}
-function rowControl(c,editable=false){const p=db.partners.find(x=>x.id===c.partnerId);const parts=[];if(c.positive?.length)parts.push('Pozitivní: '+c.positive.join(', '));if(c.negative?.length)parts.push('Negativní: '+c.negative.join(', '));return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(c.date))}${parts.length?' · '+esc(parts.join(' · ')):' · Bez vybraných úkonů'}</small></div>${editable?`<button class="small secondary" onclick="openControlActivity('${c.id}')">Upravit</button><button class="small danger" onclick="deleteControlActivity('${c.id}')">×</button>`:''}</div>`}
+function rowControl(c,editable=false){const p=db.partners.find(x=>x.id===c.partnerId);const parts=[];if(c.positive?.length)parts.push('Pozitivní: '+c.positive.join(', '));if(c.negative?.length)parts.push('Negativní: '+c.negative.join(', '));return `<div class="partner"><i class="dot" style="background:${p?.color||'#777'}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(c.date))}${parts.length?' · '+esc(parts.join(' · ')):' · Bez vybraných úkonů'}</small>${c.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(c.note)}</div>`:''}</div>${editable?`<button class="small secondary" onclick="openControlActivity('${c.id}')">Upravit</button><button class="small danger" onclick="deleteControlActivity('${c.id}')">×</button>`:''}</div>`}
 function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
 function avatar(teacher){
  const initial=teacher.name.trim().charAt(0).toLocaleUpperCase('cs-CZ')||'?';
@@ -327,6 +327,7 @@ function openControlActivity(id){
  <label>Datum a čas</label><input id="cDate" type="datetime-local" value="${local}">
  <h3>Pozitivní kontrolní úkony</h3><div id="controlPositiveChecks" class="checks"></div>
  <h3>Negativní kontrolní úkony</h3><div id="controlNegativeChecks" class="checks"></div>
+ <label for="cNote">Poznámka (nepovinná)</label><textarea id="cNote" rows="3" maxlength="10000" placeholder="Poznámka ke kontrolní činnosti…">${esc(c?.note||'')}</textarea>
  <button style="width:100%" onclick="saveControlActivity()">Uložit kontrolní činnost</button>`);
  currentControlPositive=Array.isArray(c?.positive)?[...c.positive]:[];
  currentControlNegative=Array.isArray(c?.negative)?[...c.negative]:[];
@@ -336,7 +337,7 @@ function openControlActivity(id){
 function saveControlActivity(){
  if(!$('cPartner').value)return toast('Vyberte učitele.');
  const date=new Date($('cDate').value);if(!Number.isFinite(date.getTime()))return toast('Zkontrolujte datum a čas.');
- const item={id:editing||uid(),partnerId:$('cPartner').value,date:date.toISOString(),positive:[...currentControlPositive],negative:[...currentControlNegative]};
+ const item={id:editing||uid(),partnerId:$('cPartner').value,date:date.toISOString(),positive:[...currentControlPositive],negative:[...currentControlNegative],note:$('cNote').value};
  if(editing)db.controls=db.controls.map(c=>c.id===editing?item:c);else db.controls.push(item);
  closeModal();save();toast('Kontrolní činnost uložena.');
 }

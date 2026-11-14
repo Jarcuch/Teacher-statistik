@@ -4,5 +4,5 @@ Aplikace vychází z verze Partner Statistik 2.5. Pro nasazení na GitHub Pages 
 
 Teacher_statistik má vlastní úložiště v prohlížeči. Náslechové záznamy i kontrolní činnost se ukládají v tomto zařízení; export/import v Nastavení přenáší učitele, kritéria a všechny záznamy. Zálohu uchovávejte v soukromí.
 
-Černé logo na bílém pozadí je v záhlaví aplikace a v instalačních ikonách.
+Fialové logo ve tvaru štítu s průhledným okolím je v záhlaví aplikace a v instalačních ikonách.
 

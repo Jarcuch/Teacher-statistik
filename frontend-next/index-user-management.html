@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Teacher_control">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<title>Teacher_control</title>
+<style>
+:root{color-scheme:dark;--bg:#0e1119;--panel:#191f2b;--panel2:#222a39;--muted:#9ba6b8;--text:#f5f6fa;--accent:#ffffff;--line:#30394a;--danger:#ff647c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+header{padding:calc(18px + env(safe-area-inset-top)) 18px 14px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:25px;margin:0}h2{font-size:19px;margin:8px 0 14px}h3{font-size:16px;margin:0 0 8px}
+main{padding:0 16px;max-width:720px;margin:auto}.muted,.sub{color:var(--muted)}.sub{font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric strong{display:block;font-size:30px;margin:5px 0}.metric span{font-size:13px;color:var(--muted)}
+button,.btn{border:0;border-radius:13px;background:var(--accent);color:#171322;padding:12px 15px;font-size:15px;font-weight:650;cursor:pointer}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.danger{background:#542532;color:#ffdce2}
+button.small{padding:8px 11px;font-size:13px}.icon-button{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:8px;flex:none}.icon-button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.chip{background:#30394a;border-radius:20px;padding:7px 10px;font-size:13px}.chip button{background:transparent;color:#ff9aa9;padding:0 0 0 8px}.checks label{display:flex;gap:10px;align-items:center;background:#222a39;padding:10px;border-radius:10px;margin:7px 0}.checks input{width:auto;margin:0}.settings-select{margin-top:5px}.row{display:flex;align-items:center;gap:10px}.between{justify-content:space-between}
+button.stats-tab{flex:1;background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.stats-tab.active{background:var(--accent);color:#171322}
+input,select,textarea{width:100%;background:#111722;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:13px;font-size:16px;margin:5px 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
+nav{position:fixed;bottom:0;left:0;right:0;padding:9px 8px calc(9px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#151b26;border-top:1px solid var(--line);z-index:5}
+nav button{background:transparent;color:var(--muted);padding:8px 2px;font-size:12px}nav button.active{color:var(--accent)}
+nav span{display:block;font-size:20px;margin-bottom:3px}
+.partner{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.dot{width:14px;height:14px;border-radius:50%;flex:none}
+.partner .info{flex:1;min-width:0}.partner .info b{display:block}.partner .info small{color:var(--muted)}
+.hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.barline{display:grid;grid-template-columns:minmax(65px,1fr) 2fr 28px;gap:8px;align-items:center;margin:11px 0;font-size:13px}.track{height:11px;background:#30394a;border-radius:9px;overflow:hidden}.fill{height:100%;border-radius:9px}
+.toast{position:fixed;top:calc(10px + env(safe-area-inset-top));left:16px;right:16px;background:#293347;border:1px solid var(--line);padding:13px;border-radius:12px;z-index:20;text-align:center}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+.app-logo{display:block;flex:none;border-radius:9px}
+#app{min-height:calc(100dvh - 82px - env(safe-area-inset-bottom));display:flex;flex-direction:column}
+main{width:100%;flex:1;display:flex;flex-direction:column}
+#home{flex:1;display:flex;flex-direction:column}
+.last-update{margin-top:auto;padding:14px 0 4px;text-align:right;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<style>
+  #app[hidden], #accountGate[hidden], #adminPanel[hidden] { display: none !important; }
+  #accountGate { max-width: 420px; margin: 3rem auto; padding: 0 1rem; }
+  #accountForm { display: grid; gap: 0.75rem; }
+  #accountForm label { display: grid; gap: 0.25rem; }
+</style>
+<section id="accountGate">
+  <div class="card">
+    <h1>Teacher_control</h1>
+    <form id="accountForm">
+      <label>Uživatelské jméno
+        <input id="accountUsername" name="username" autocomplete="username" required>
+      </label>
+      <label>Heslo
+        <input id="accountPassword" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="accountSignIn" type="submit" disabled>Přihlásit se</button>
+    </form>
+    <p id="accountMessage" class="sub" role="status"></p>
+  </div>
+</section>
+<div id="app" hidden>
+<header><div><h1>Teacher_control</h1><div class="sub" id="today"></div></div><img class="app-logo" src="icon-192.png" alt="" width="44" height="44"></header>
+<main>
+<div class="card row between">
+  <span id="accountIdentity"></span>
+  <button id="accountSignOut" type="button" class="secondary small">Odhlásit se</button>
+</div>
+<section id="adminPanel" class="card" hidden>
+  <h2>Správa uživatelů</h2>
+  <label for="adminAccount">Vyberte účet</label>
+  <select id="adminAccount" disabled></select>
+  <p id="adminActiveAccount" role="status"></p>
+  <button id="adminDeleteData" type="button" class="danger">Smazat všechna data tohoto účtu</button>
+  <button id="adminDeleteAccount" type="button" class="danger" disabled>Smazat přihlašovací účet</button>
+  <details>
+    <summary>Vytvořit běžný účet</summary>
+    <form id="adminCreateAccount" method="post">
+      <label for="adminNewUsername">Uživatelské jméno</label>
+      <input id="adminNewUsername" autocomplete="off" maxlength="64" required>
+      <p class="sub">Použijte malá písmena bez diakritiky, číslice, tečku, podtržítko nebo pomlčku.</p>
+      <label for="adminNewPassword">Heslo (alespoň 15 znaků)</label>
+      <input id="adminNewPassword" type="password" autocomplete="new-password" minlength="15" maxlength="1024" required>
+      <label for="adminConfirmPassword">Potvrďte heslo</label>
+      <input id="adminConfirmPassword" type="password" autocomplete="new-password" minlength="15" maxlength="1024" required>
+      <button type="submit">Vytvořit účet</button>
+    </form>
+  </details>
+</section>
+<section id="home" class="page">
+ <div class="grid">
+  <div class="card metric"><span>Celkem záznamů</span><strong id="totalCount">0</strong></div>
+  <div class="card metric"><span>Učitelů</span><strong id="partnerCount">0</strong></div>
+ </div>
+ <div class="card"><div class="row between"><h2>Poslední záznamy</h2><button class="small secondary" onclick="showPage('records')">Všechny</button></div><h3>Náslechové záznamy</h3><div id="recentObservations"></div><h3 style="margin-top:16px">Kontrolní činnost</h3><div id="recentControls"></div></div>
+ <button style="width:100%;background:#ffffff;color:#171322;border:1px solid #ffffff" onclick="openRecord(undefined,true)">＋ Přidat náslechový záznam</button>
+ <button style="width:100%;margin-top:10px;background:#9ca3af;color:#171322;border:1px solid #9ca3af" onclick="openControlActivity()">＋ Kontrolní činnost</button>
+ <footer class="last-update">Poslední aktualizace <time datetime="2026-11-14T20:44:25.000Z">14. 11. 2026 21:44</time></footer>
+</section>
+<section id="partners" class="page hidden">
+ <div class="row between"><h2>Učitelé</h2><button onclick="openPartner()">＋ Přidat</button></div>
+ <div class="card" id="partnerList"></div>
+</section>
+<section id="criteria" class="page hidden">
+ <h2>Kritéria</h2>
+ <div class="card">
+  <h3>Náslechový záznam</h3>
+  <p class="sub">Výchozích 22 kritérií je pevných. Můžeš přidat a odebrat vlastní kritéria.</p>
+  <h4>Kladné hodnocení</h4>
+  <div id="fixedObservationHobbies" class="chips"></div>
+  <div id="observationHobbyChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationHobbies')">
+   <input id="newObservationHobby" aria-label="Nové kladné kritérium" placeholder="Přidat kladné kritérium" style="margin:0">
+   <button type="submit" aria-label="Přidat kladné kritérium">＋</button>
+  </form>
+  <h4>Záporné hodnocení</h4>
+  <div id="fixedObservationFlaws" class="chips"></div>
+  <div id="observationFlawChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('observationFlaws')">
+   <input id="newObservationFlaw" aria-label="Nové záporné kritérium" placeholder="Přidat záporné kritérium" style="margin:0">
+   <button type="submit" aria-label="Přidat záporné kritérium">＋</button>
+  </form>
+ </div>
+ <div class="card">
+  <h3>Kontrolní činnost</h3>
+  <h4>Pozitivní</h4>
+  <div id="controlPositiveChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('controlPositive')">
+   <input id="newControlPositive" aria-label="Nový pozitivní kontrolní úkon" placeholder="Přidat pozitivní kontrolní úkon" style="margin:0">
+   <button type="submit" aria-label="Přidat pozitivní kontrolní úkon">＋</button>
+  </form>
+  <h4>Negativní</h4>
+  <div id="controlNegativeChips" class="chips"></div>
+  <form class="row" onsubmit="event.preventDefault();addCriterion('controlNegative')">
+   <input id="newControlNegative" aria-label="Nový negativní kontrolní úkon" placeholder="Přidat negativní kontrolní úkon" style="margin:0">
+   <button type="submit" aria-label="Přidat negativní kontrolní úkon">＋</button>
+  </form>
+ </div>
+</section>
+<section id="records" class="page hidden">
+ <h2>Záznamy</h2>
+ <div class="card"><h3>Náslechový záznam</h3><div id="recordList"></div></div>
+ <div class="card"><h3>Kontrolní činnost</h3><div id="controlList"></div></div>
+</section>
+<section id="stats" class="page hidden">
+ <h2>Statistiky</h2>
+ <div class="actions stats-tabs"><button class="stats-tab active" data-stat-view="observation" onclick="showStatsView('observation')">Náslechové záznamy</button><button class="stats-tab" data-stat-view="control" onclick="showStatsView('control')">Kontrolní činnost</button></div>
+ <div id="observationStatsPanel">
+  <div class="card">
+   <div class="row" style="flex-wrap:wrap">
+    <label><input type="checkbox" id="allTime" checked style="width:auto;margin-right:8px">Celé období</label>
+    <label><input type="checkbox" id="currentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+   </div>
+   <div id="dateFilters" class="hidden"><label>Od</label><input type="date" id="fromDate"><label>Do</label><input type="date" id="toDate"></div>
+  </div>
+  <div class="grid"><div class="card metric"><span>Záznamů ve výběru</span><strong id="filteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="activeCount">0</strong></div></div>
+  <div class="card"><h3>Podle učitelů</h3><div id="partnerStats"></div></div>
+  <div class="card"><h3>Po měsících</h3><div id="monthStats"></div></div>
+  <div class="card"><h3>Nejčastější kladné hodnocení</h3><div id="hobbyStats"></div></div>
+  <div class="card"><h3>Nejčastější záporné hodnocení</h3><div id="flawStats"></div></div>
+ </div>
+ <div id="controlStatsPanel" class="hidden">
+  <div class="card">
+   <div class="row" style="flex-wrap:wrap">
+    <label><input type="checkbox" id="controlAllTime" checked style="width:auto;margin-right:8px">Celé období</label>
+    <label><input type="checkbox" id="controlCurrentMonth" style="width:auto;margin-right:8px">Aktuální měsíc</label>
+   </div>
+   <div id="controlDateFilters" class="hidden"><label>Od</label><input type="date" id="controlFromDate"><label>Do</label><input type="date" id="controlToDate"></div>
+  </div>
+  <div class="grid"><div class="card metric"><span>Kontrolních činností ve výběru</span><strong id="controlFilteredCount">0</strong></div><div class="card metric"><span>Aktivních učitelů</span><strong id="controlActiveCount">0</strong></div></div>
+  <div class="card"><h3>Podle učitelů</h3><div id="controlPartnerStats"></div></div>
+  <div class="card"><h3>Po měsících</h3><div id="controlMonthStats"></div></div>
+  <div class="card"><h3>Pozitivní kontrolní činnost</h3><div id="controlPositiveStats"></div></div>
+  <div class="card"><h3>Negativní kontrolní činnost</h3><div id="controlNegativeStats"></div></div>
+ </div>
+</section>
+<section id="settings" class="page hidden">
+ <h2>Nastavení a data</h2>
+ <div class="card"><h3>Záloha</h3><p class="sub">Export obsahuje učitele, kritéria, poznámky, náslechové záznamy a kontrolní činnost. Soubor JSON uchovávejte v soukromí.</p><div class="actions"><button onclick="exportData()">Exportovat všechna data (JSON)</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importovat data (JSON)</button><input id="importFile" type="file" accept="application/json" class="hidden"></div></div>
+ <div class="card"><h3>Soukromí</h3><p class="sub">Údaje se ukládají na server pod vaším účtem. Pravidelně exportujte zálohu.</p></div>
+</section>
+</main>
+<nav>
+ <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Přehled</button>
+ <button data-page="partners" onclick="showPage('partners')"><span>♙</span>Učitelé</button>
+ <button data-page="criteria" onclick="showPage('criteria')"><span>☷</span>Kritéria</button>
+ <button data-page="records" onclick="showPage('records')"><span>▤</span>Záznamy</button>
+ <button data-page="stats" onclick="showPage('stats')"><span>▥</span>Statistiky</button>
+ <button data-page="settings" onclick="showPage('settings')"><span>⚙</span>Nastavení</button>
+</nav>
+</div>
+<div id="modal" class="hidden" style="position:fixed;inset:0;background:#000b;z-index:10;display:flex;align-items:end">
+ <div class="card" style="width:100%;max-height:90dvh;overflow:auto;border-radius:22px 22px 0 0;margin:0;padding:20px 18px calc(22px + env(safe-area-inset-bottom))">
+  <div class="row between"><h2 id="modalTitle">Nový záznam</h2><button class="secondary small" onclick="closeModal()">Zavřít</button></div>
+  <div id="modalBody"></div>
+ </div>
+</div>
+<div id="toast" class="toast hidden"></div>
+<script src="./api-user-management.js"></script>
+<script src="./workspace-ui.js"></script>
+<script src="./admin-users-ui.js"></script>
+<script>
+const DEFAULT_CRITERIA={
+ hobbies:[
+  "Žáci vědí, co se mají naučit",
+  "Zadání je srozumitelné a žáci vědí, jak začít",
+  "Většina žáků má příležitost aktivně pracovat",
+  "Zvolené činnosti pomáhají dosáhnout cíle hodiny",
+  "Žáci dostávají pomoc podle svých potřeb",
+  "Učitel ověřuje porozumění u více žáků",
+  "Žáci dostávají konkrétní radu, jak práci zlepšit",
+  "Žáci mají možnost chybu vysvětlit a opravit",
+  "Přechody mezi činnostmi jsou plynulé",
+  "Učitel reaguje na dotazy a chyby s respektem",
+  "Žáci na závěr ukážou nebo pojmenují, co se naučili"
+ ],
+ flaws:[
+  "Žákům není jasné, co se mají naučit",
+  "Nejasné zadání vede k opakovaným dotazům",
+  "Do práce se zapojuje jen malá část žáků",
+  "Činnosti mají slabou vazbu na cíl hodiny",
+  "Žáci, kteří se při práci zaseknou, zůstávají bez podpory",
+  "Porozumění se posuzuje jen podle odpovědí dobrovolníků",
+  "Zpětná vazba je obecná a žák neví, co má upravit",
+  "Chyba je označena bez vysvětlení nebo možnosti opravy",
+  "Při přechodech žáci opakovaně čekají bez úkolu",
+  "Na dotaz nebo chybu zazní znevažující poznámka",
+  "Hodina končí bez ověření, zda žáci cíle dosáhli"
+ ]
+};
+let db=normalizeData(), editing=null, modalKind='', currentRecordHobbies=[], currentRecordFlaws=[], currentControlPositive=[], currentControlNegative=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>crypto.randomUUID();
+
+function escapeAttribute(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function idArgument(value) {
+  return escapeAttribute(JSON.stringify(String(value)));
+}
+
+function teacherColor(value, fallback) {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)
+    ? value
+    : fallback;
+}
+const fmt=d=>new Date(d).toLocaleString('cs-CZ',{dateStyle:'medium',timeStyle:'short'});
+const colorSet=['#ffffff','#f3f4f6','#94a3b8','#64748b','#334155','#1f2937','#f87171','#ef4444','#b91c1c','#fb923c','#f97316','#c2410c','#fbbf24','#eab308','#a16207','#4ade80','#22c55e','#15803d','#2dd4bf','#14b8a6','#0f766e','#60a5fa','#3b82f6','#1d4ed8','#a78bfa','#8b5cf6','#6d28d9','#f472b6','#ec4899','#be185d'];
+function normalizeData({partners=[],records=[],controls=[],criteria}={}){
+ const sharedCriteria={defaultsAdded:true};
+ for(const field of ['hobbies','flaws']){
+  const items=criteria?.[field];
+  const names=Array.isArray(items)?items:partners.flatMap(p=>Array.isArray(p[field])?p[field]:[]);
+  const unique=new Set(names.filter(value=>typeof value==='string'&&value.trim()));
+  if(criteria?.defaultsAdded!==true){
+   const existing=new Set([...unique].map(value=>value.trim().toLowerCase()));
+   for(const name of DEFAULT_CRITERIA[field]){
+    if(!existing.has(name.toLowerCase()))unique.add(name);
+   }
+  }
+  const observationField=field==='hobbies'?'observationHobbies':'observationFlaws';
+  const fixedCriteria=DEFAULT_CRITERIA[field];
+  const fixedNames=new Set(fixedCriteria.map(name=>name.toLowerCase()));
+  const savedObservation=Array.isArray(criteria?.[observationField])?criteria[observationField]:[];
+  const additional=[...unique,...savedObservation].filter(value=>
+   typeof value==='string'&&value.trim()&&!fixedNames.has(value.trim().toLowerCase())
+  );
+  sharedCriteria[field]=[];
+  sharedCriteria[observationField]=[...fixedCriteria,...new Set(additional)];
+ }
+ for(const field of ['controlPositive','controlNegative']){
+  const values=Array.isArray(criteria?.[field])?criteria[field]:[];
+  sharedCriteria[field]=[...new Set(values.filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()))];
+ }
+ return {partners:partners.map(({hobbies,flaws,photo,...teacher})=>teacher),records,controls:Array.isArray(controls)?controls:[],criteria:sharedCriteria};
+}
+function save(nextData) {
+  return dataUi.save(nextData);
+}
+function toast(s){$('toast').textContent=s;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2300)}
+function showPage(p){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(p).classList.remove('hidden');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render()}
+function partnerName(id){const p=db.partners.find(x=>x.id===id);return p?(p.name):'Smazaný učitel'}
+function rowRecord(r,editable=false,pdf=false){const p=db.partners.find(x=>x.id===r.partnerId);return `<div class="partner"><i class="dot" style="background:${teacherColor(p?.color, '#777')}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(r.date))}${r.type==='observation'?' · Náslechový záznam':''}${r.topic?' · Téma hodiny: '+esc(r.topic):''}${Array.isArray(r.hobbies)&&r.hobbies.length?' · Kladné hodnocení: '+esc(r.hobbies.join(', ')):''}${Array.isArray(r.flaws)&&r.flaws.length?' · Záporné hodnocení: '+esc(r.flaws.join(', ')):''}</small>${r.type==='observation'?`
+ ${r.progress?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Průběh hodiny</b>${esc(r.progress)}</div>`:''}
+ ${r.recommendations?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere"><b>Doporučení</b>${esc(r.recommendations)}</div>`:''}`:''}${r.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(r.note)}</div>`:''}</div>${pdf?`<button class="small secondary icon-button" title="Uložit jako PDF" aria-label="Uložit náslechový záznam jako PDF" onclick="exportRecordPdf(${idArgument(r.id)})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/><path d="M18 12h.01"/></svg></button>`:''}${editable?`<button class="small secondary icon-button" title="Upravit" aria-label="Upravit náslechový záznam" onclick="openRecord(${idArgument(r.id)})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4"/><path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/><path d="M4 20h5"/></svg></button><button class="small danger" onclick="deleteRecord(${idArgument(r.id)})" title="Smazat" aria-label="Smazat náslechový záznam">×</button>`:''}</div>`}
+function rowControl(c,editable=false){const p=db.partners.find(x=>x.id===c.partnerId);const parts=[];if(c.positive?.length)parts.push('Pozitivní: '+c.positive.join(', '));if(c.negative?.length)parts.push('Negativní: '+c.negative.join(', '));return `<div class="partner"><i class="dot" style="background:${teacherColor(p?.color, '#777')}"></i><div class="info"><b>${esc(p?.name||'Neznámý učitel')}</b><small>${esc(fmt(c.date))}${parts.length?' · '+esc(parts.join(' · ')):' · Bez vybraných úkonů'}</small>${c.note?`<div class="sub" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:5px">${esc(c.note)}</div>`:''}</div>${editable?`<button class="small secondary icon-button" title="Upravit" aria-label="Upravit kontrolní činnost" onclick="openControlActivity(${idArgument(c.id)})"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4"/><path d="m4 20 4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/><path d="M4 20h5"/></svg></button><button class="small danger" onclick="deleteControlActivity(${idArgument(c.id)})" title="Smazat" aria-label="Smazat kontrolní činnost">×</button>`:''}</div>`}
+function safePhoto(v){return typeof v==='string'&&/^data:image\/(jpeg|png|webp);base64,[a-zA-Z0-9+/=]+$/.test(v)?v:''}
+function avatar(teacher){
+ const initial=teacher.name.trim().charAt(0).toLocaleUpperCase('cs-CZ')||'?';
+ return `<div class="avatar" style="background:${teacherColor(teacher.color, '#64748b')}">${esc(initial)}</div>`;
+}
+function sortedTeachers(){return db.partners.slice().sort((a,b)=>a.name.localeCompare(b.name,'cs'))}
+function render(){
+ $('totalCount').textContent=db.records.length+db.controls.length;$('partnerCount').textContent=db.partners.length;
+ $('recentObservations').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(r=>rowRecord(r)).join('')||'<p class="sub">Zatím žádné náslechové záznamy.</p>';
+ $('recentControls').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,2).map(c=>rowControl(c)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';
+ $('partnerList').innerHTML=sortedTeachers().map(p=>`<div class="partner">${avatar(p)}<div class="info"><b>${esc(p.name)}</b><small>${esc(p.nickname||'Učebna neuvedena')} · ${db.records.filter(r=>r.partnerId===p.id).length+db.controls.filter(c=>c.partnerId===p.id).length} záznamů</small></div><button class="small secondary" onclick="openPartner(${idArgument(p.id)})">Upravit</button><button class="small danger" onclick="deletePartner(${idArgument(p.id)})">×</button></div>`).join('')||'<p class="sub">Nejdříve přidejte učitele.</p>';
+ $('recordList').innerHTML=db.records.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(r=>rowRecord(r,true,true)).join('')||'<p class="sub">Zatím žádné záznamy.</p>';
+ $('controlList').innerHTML=db.controls.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(c=>rowControl(c,true)).join('')||'<p class="sub">Zatím žádná kontrolní činnost.</p>';
+
+ renderCriteria();
+ renderStats();
+ renderControlStats();
+}
+function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.remove('hidden')}
+function closeModal(){$('modal').classList.add('hidden');currentRecordHobbies=[];currentRecordFlaws=[];currentControlPositive=[];currentControlNegative=[]}
+function openPartner(id){
+ const p=db.partners.find(x=>x.id===id);editing=id||null;modalKind='partner';
+ openModal(p?'Upravit učitele':'Nový učitel',`
+ <label>Jméno</label><input id="pName" value="${esc(p?.name||'')}" placeholder="Jméno">
+ <label>Učebna (nepovinné)</label><input id="pNick" value="${esc(p?.nickname||'')}" placeholder="Učebna">
+ <label>Barva</label><div class="row" style="flex-wrap:wrap">${colorSet.map(c=>`<button class="small" title="Barva ${c}" aria-label="Barva ${c}" style="background:${c};width:38px;height:38px;padding:0;border:2px solid ${(p?.color||colorSet[0])===c?'white':'transparent'}" onclick="document.getElementById('pColor').value='${c}'"></button>`).join('')}</div>
+ <input id="pColor" type="color" value="${teacherColor(p?.color, colorSet[0])}">
+ <button style="width:100%" onclick="savePartner()">Uložit učitele</button>`);
+ 
+}
+const criteriaGroups={
+ observationHobbies:{list:'observationHobbyChips',input:'newObservationHobby',fixed:'fixedObservationHobbies',defaults:'hobbies'},
+ observationFlaws:{list:'observationFlawChips',input:'newObservationFlaw',fixed:'fixedObservationFlaws',defaults:'flaws'},
+ controlPositive:{list:'controlPositiveChips',input:'newControlPositive'},
+ controlNegative:{list:'controlNegativeChips',input:'newControlNegative'}
+};
+function renderCriteria(){
+ for(const [field,group] of Object.entries(criteriaGroups)){
+  const fixed=group.defaults?DEFAULT_CRITERIA[group.defaults]:[];
+  const fixedNames=new Set(fixed.map(name=>name.toLowerCase()));
+  if(group.fixed)$(group.fixed).innerHTML=fixed.map(name=>`<span class="chip">${esc(name)}</span>`).join('');
+  $(group.list).innerHTML=db.criteria[field].map((name,index)=>({name,index}))
+   .filter(item=>!fixedNames.has(item.name.toLowerCase()))
+   .map(item=>`<span class="chip">${esc(item.name)} <button type="button" onclick="removeCriterion('${field}',${item.index})" aria-label="Odebrat ${esc(item.name)}">×</button></span>`)
+   .join('')||(!group.defaults?'<span class="sub">Zatím žádné úkony.</span>':'');
+ }
+}
+function saveCriteria(field, values) {
+  return save({ ...db, criteria: { ...db.criteria, [field]: values } });
+}
+async function addCriterion(field){
+ const input=$(criteriaGroups[field].input);
+ const name=input.value.trim();
+ if(!name)return;
+ if(db.criteria[field].some(value=>value.toLowerCase()===name.toLowerCase()))return toast('Toto kritérium už existuje.');
+ if(await saveCriteria(field,[...db.criteria[field],name]))input.value='';
+}
+function removeCriterion(field,index){
+ const defaults=DEFAULT_CRITERIA[criteriaGroups[field].defaults]||[];
+ const fixedNames=new Set(defaults.map(name=>name.toLowerCase()));
+ if(fixedNames.has(db.criteria[field][index]?.toLowerCase()))return;
+ saveCriteria(field,db.criteria[field].filter((_,position)=>position!==index));
+}
+async function savePartner() {
+  const name = $('pName').value.trim();
+  if (!name) return toast('Vyplňte jméno.');
+
+  const item = {
+    id: editing || uid(),
+    name,
+    nickname: $('pNick').value.trim(),
+    color: $('pColor').value,
+  };
+  const partners = editing
+    ? db.partners.map(person => person.id === editing ? item : person)
+    : [...db.partners, item];
+
+  if (await save({ ...db, partners })) {
+    closeModal();
+    toast('Učitel uložen.');
+  }
+}
+function deletePartner(id) {
+  const person = db.partners.find(item => item.id === id);
+  if (!person || !confirm('Smazat učitele ' + person.name + ' a všechny jeho záznamy?')) return;
+  void save({
+    ...db,
+    partners: db.partners.filter(item => item.id !== id),
+    records: db.records.filter(item => item.partnerId !== id),
+    controls: db.controls.filter(item => item.partnerId !== id),
+  });
+}
+function openRecord(id,observation=false){
+ currentRecordHobbies=[];
+ currentRecordFlaws=[];
+ if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
+ const r=db.records.find(x=>x.id===id);editing=id||null;
+ const isObservation=Boolean(r)||observation;
+ modalKind=isObservation?'observation':'record';const d=r?new Date(r.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+ openModal(isObservation?(r?'Upravit náslechový záznam':'Nový náslechový záznam'):(r?'Upravit záznam':'Nový záznam'),`
+ <label>Učitel</label><select id="rPartner">${r?'':'<option value="" selected disabled>Vyberte učitele</option>'}${sortedTeachers().map(p=>`<option value="${escapeAttribute(p.id)}" ${p.id===r?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+ <label>Datum a čas</label><input id="rDate" type="datetime-local" value="${local}">
+ <label for="rTopic">Téma hodiny (nepovinné)</label><input id="rTopic" value="${esc(r?.topic||'')}" placeholder="Téma hodiny">
+ ${isObservation?`<label for="rClassInfo">Třída, skupina, učebna</label><input id="rClassInfo" value="${esc(r?.classInfo||'')}" placeholder="Např. 7.A, skupina 2, učebna 15">`:''}
+ <label>Kladné hodnocení (lze vybrat více)</label><div id="recordHobbyChecks" class="checks"></div>
+ <label>Záporné hodnocení (lze vybrat více)</label><div id="recordFlawChecks" class="checks"></div>
+ ${isObservation?`
+ <label for="rProgress">Průběh hodiny</label><textarea id="rProgress" rows="3" maxlength="10000">${esc(r?.progress||'')}</textarea>
+ <label for="rRecommendations">Doporučení</label><textarea id="rRecommendations" rows="3" maxlength="10000">${esc(r?.recommendations||'')}</textarea>`:''}
+ <label>Poznámka (nepovinné, mimo statistiky)</label><textarea id="rNote" rows="3" maxlength="10000" placeholder="Poznámka k záznamu…"></textarea>
+ <button style="width:100%" onclick="saveRecord()">Uložit záznam</button>`);
+ currentRecordHobbies=Array.isArray(r?.hobbies)?[...r.hobbies]:[];currentRecordFlaws=Array.isArray(r?.flaws)?[...r.flaws]:[];
+ $('rNote').value=r?.note||'';
+ if(isObservation)$('rClassInfo').value=r?.classInfo||'';
+ renderRecordCriteria(isObservation?'observationHobbies':'hobbies','recordHobbyChecks',currentRecordHobbies,values=>{currentRecordHobbies=values});
+ renderRecordCriteria(isObservation?'observationFlaws':'flaws','recordFlawChecks',currentRecordFlaws,values=>{currentRecordFlaws=values});
+}
+function openControlActivity(id){
+ if(!db.partners.length)return toast('Nejdříve přidejte učitele.');
+ const c=db.controls.find(x=>x.id===id);editing=id||null;modalKind='control';
+ const d=c?new Date(c.date):new Date();const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+ openModal(c?'Upravit kontrolní činnost':'Nová kontrolní činnost',`
+ <label>Učitel</label><select id="cPartner">${c?'':'<option value="" selected disabled>Vyberte učitele</option>'}${sortedTeachers().map(p=>`<option value="${escapeAttribute(p.id)}" ${p.id===c?.partnerId?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+ <label>Datum a čas</label><input id="cDate" type="datetime-local" value="${local}">
+ <h3>Pozitivní kontrolní úkony</h3><div id="controlPositiveChecks" class="checks"></div>
+ <h3>Negativní kontrolní úkony</h3><div id="controlNegativeChecks" class="checks"></div>
+ <label for="cNote">Poznámka (nepovinná)</label><textarea id="cNote" rows="3" maxlength="10000" placeholder="Poznámka ke kontrolní činnosti…">${esc(c?.note||'')}</textarea>
+ <button style="width:100%" onclick="saveControlActivity()">Uložit kontrolní činnost</button>`);
+ currentControlPositive=Array.isArray(c?.positive)?[...c.positive]:[];
+ currentControlNegative=Array.isArray(c?.negative)?[...c.negative]:[];
+ renderRecordCriteria('controlPositive','controlPositiveChecks',currentControlPositive,values=>{currentControlPositive=values});
+ renderRecordCriteria('controlNegative','controlNegativeChecks',currentControlNegative,values=>{currentControlNegative=values});
+}
+async function saveControlActivity(){
+ if(!$('cPartner').value)return toast('Vyberte učitele.');
+ const date=new Date($('cDate').value);if(!Number.isFinite(date.getTime()))return toast('Zkontrolujte datum a čas.');
+ const item={id:editing||uid(),partnerId:$('cPartner').value,date:date.toISOString(),positive:[...currentControlPositive],negative:[...currentControlNegative],note:$('cNote').value};
+ const controls = editing
+   ? db.controls.map(control => control.id === editing ? item : control)
+   : [...db.controls, item];
+ if (await save({ ...db, controls })) {
+   closeModal();
+   toast('Kontrolní činnost uložena.');
+ }
+}
+function deleteControlActivity(id) {
+  if (!confirm('Opravdu chcete tuto kontrolní činnost smazat?')) return;
+  void save({ ...db, controls: db.controls.filter(control => control.id !== id) });
+}
+function renderRecordCriteria(field,target,selected,onChange){
+ const active=db.criteria[field];
+ const options=[...new Set([...active,...selected])];
+ const container=$(target);
+ container.innerHTML=options.map(name=>
+  `<label><input type="checkbox" ${selected.includes(name)?'checked':''}><span>${esc(name)}${active.includes(name)?'':' (historická)'}</span></label>`
+ ).join('')||'<p class="sub">Položky přidáte v záložce Kritéria.</p>';
+ const inputs=[...container.querySelectorAll('input')];
+ inputs.forEach(input=>input.addEventListener('change',()=>onChange(options.filter((_,index)=>inputs[index].checked))));
+}
+async function saveRecord(){if(!$('rPartner').value)return toast('Vyberte učitele.');const date=new Date($('rDate').value);if(!Number.isFinite(date.getTime()))return toast('Zkontrolujte datum a čas.');const item={id:editing||uid(),partnerId:$('rPartner').value,date:date.toISOString(),topic:$('rTopic').value.trim(),classInfo:$('rClassInfo')?.value.trim()||'',hobbies:[...currentRecordHobbies],flaws:[...currentRecordFlaws],note:$('rNote').value};
+ if(modalKind==='observation'){
+  item.type='observation';
+  item.progress=$('rProgress').value.trim();
+  item.recommendations=$('rRecommendations').value.trim();
+ }
+ const records = editing
+   ? db.records.map(record => record.id === editing ? item : record)
+   : [...db.records, item];
+ if (await save({ ...db, records })) {
+   closeModal();
+   toast('Záznam uložen.');
+ }
+}
+function deleteRecord(id) {
+  if (!confirm('Opravdu chcete tento záznam smazat?')) return;
+  void save({ ...db, records: db.records.filter(record => record.id !== id) });
+}
+function exportRecordPdf(id){
+ const record=db.records.find(item=>item.id===id);
+ if(!record)return toast('Náslechový záznam nebyl nalezen.');
+ const teacher=db.partners.find(item=>item.id===record.partnerId);
+ const teacherName=teacher?.name||'Neznámý učitel';
+ const listSection=(title,values)=>Array.isArray(values)&&values.length?`<section><h2>${esc(title)}</h2><ul>${values.map(value=>`<li>${esc(value)}</li>`).join('')}</ul></section>`:'';
+ const textSection=(title,value)=>value?.trim()?`<section><h2>${esc(title)}</h2><p>${esc(value).replace(/\n/g,'<br>')}</p></section>`:'';
+ const info=[
+  ['Datum a čas',fmt(record.date)],
+  ['Učitel',teacherName],
+  ['Třída, skupina, učebna',record.classInfo||''],
+  ['Téma hodiny',record.topic||'']
+ ].map(([label,value])=>`<div class="info-row"><strong>${esc(label)}</strong><span>${esc(value)}</span></div>`).join('');
+ const printWindow=window.open('','_blank');
+ if(!printWindow)return toast('Pro uložení PDF povolte vyskakovací okna.');
+
+ const html=`<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Náslechový záznam – ${esc(teacherName)}</title><style>
+ @page{size:A4;margin:0}*{box-sizing:border-box}body{font:12pt Arial,sans-serif;color:#111;margin:0;line-height:1.45}h1{text-align:center;font-size:18pt;margin:0 0 22px}h2{font-size:13pt;margin:18px 0 7px;border-bottom:1px solid #777;padding-bottom:3px}.info{margin-bottom:18px}.info-row{display:grid;grid-template-columns:190px 1fr;gap:12px;padding:4px 0}.info-row strong{font-weight:700}p{margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}ul{margin:6px 0 0;padding-left:22px}li{margin:3px 0;overflow-wrap:anywhere}.signatures{margin-top:28px;break-inside:avoid}.signature-row{margin-top:24px}.signature-line{display:inline-block;min-width:180px;border-bottom:1px solid #333;height:20px;margin:0 8px 0 5px}.sign-label{display:block;margin-bottom:4px}.screen-only{text-align:right;margin-bottom:14px}.screen-only button{padding:9px 14px;border:0;border-radius:8px;background:#26364c;color:#fff;font-size:14px;cursor:pointer}@media print{.screen-only{display:none}body{margin:35mm 25mm 34mm}}</style></head><body>
+ <div class="screen-only"><button type="button" onclick="window.close()">Zavřít a zpět do aplikace</button></div>
+
+ <h1>Náslechový záznam</h1><div class="info">${info}</div>
+ ${listSection('Kladné hodnocení',record.hobbies)}
+ ${listSection('Záporné hodnocení',record.flaws)}
+ ${textSection('Průběh hodiny',record.progress||'')}
+ ${textSection('Doporučení',record.recommendations||'')}
+ ${textSection('Poznámka',record.note||'')}
+ <div class="signatures"><p><strong>Projednáno dne:</strong><span class="signature-line" style="min-width:260px"></span></p>
+ <div class="signature-row"><span class="sign-label"><strong>Vzal/a na vědomí (učitel):</strong> ${esc(teacherName)}</span><span>Podpis:<span class="signature-line"></span></span></div>
+ <div class="signature-row"><span class="sign-label"><strong>Hospitoval/a:</strong></span><span>Jméno:<span class="signature-line"></span>Podpis:<span class="signature-line"></span></span></div></div>
+ </body></html>`;
+ printWindow.document.open();printWindow.document.write(html);printWindow.document.close();
+ printWindow.onafterprint=()=>printWindow.close();
+ setTimeout(()=>{printWindow.focus();printWindow.print()},300);
+}
+function renderStats(){
+ const all=$('allTime').checked;
+ const currentMonth=$('currentMonth').checked;
+ $('dateFilters').classList.toggle('hidden',all||currentMonth);
+ let rows=db.records;
+ if(currentMonth){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,1);
+  rows=rows.filter(record=>{const date=new Date(record.date);return date>=start&&date<end});
+ }else if(!all){const from=$('fromDate').value?new Date($('fromDate').value+'T00:00:00'):new Date(0);const to=$('toDate').value?new Date($('toDate').value+'T23:59:59.999'):new Date();rows=rows.filter(r=>new Date(r.date)>=from&&new Date(r.date)<=to)}
+ const counts=db.partners.map(p=>({p,n:rows.filter(r=>r.partnerId===p.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
+ $('filteredCount').textContent=rows.length;$('activeCount').textContent=counts.length;
+ const max=Math.max(1,...counts.map(x=>x.n));
+ $('partnerStats').innerHTML=counts.map(x=>`<div class="barline"><span>${esc(x.p.name)}</span><div class="track"><div class="fill" style="width:${x.n/max*100}%;background:${teacherColor(x.p.color, '#64748b')}"></div></div><b>${x.n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
+ const months={};rows.forEach(r=>{const d=new Date(r.date);const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=(months[k]||0)+1});
+ const entries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));const mm=Math.max(1,...entries.map(x=>x[1]));
+ $('monthStats').innerHTML=entries.map(([k,n])=>`<div class="barline"><span>${k}</span><div class="track"><div class="fill" style="width:${n/mm*100}%;background:var(--accent)"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné záznamy v období.</p>';
+ const tally=(field,target,color)=>{const c=Object.create(null);rows.forEach(r=>{(Array.isArray(r[field])?r[field]:[]).forEach(h=>{c[h]=(c[h]||0)+1})});const entries=Object.entries(c).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));const top=Math.max(1,...entries.map(x=>x[1]));$(target).innerHTML=entries.map(([h,n])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(h)}</span><div class="track"><div class="fill" style="width:${n/top*100}%;background:${color}"></div></div><b>${n}</b></div>`).join('')||'<p class="sub">Žádné položky ve vybraném období.</p>'};
+ tally('hobbies','hobbyStats','var(--accent)');tally('flaws','flawStats','#f28b82');
+}
+function showStatsView(view){
+ const isControl=view==='control';
+ $('observationStatsPanel').classList.toggle('hidden',isControl);
+ $('controlStatsPanel').classList.toggle('hidden',!isControl);
+ document.querySelectorAll('[data-stat-view]').forEach(button=>button.classList.toggle('active',button.dataset.statView===view));
+ if(isControl)renderControlStats();else renderStats();
+}
+function renderControlStats(){
+ const all=$('controlAllTime').checked;
+ const currentMonth=$('controlCurrentMonth').checked;
+ $('controlDateFilters').classList.toggle('hidden',all||currentMonth);
+ let rows=db.controls;
+ if(currentMonth){
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),1);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,1);
+  rows=rows.filter(record=>{const date=new Date(record.date);return date>=start&&date<end});
+ }else if(!all){
+  const from=$('controlFromDate').value?new Date($('controlFromDate').value+'T00:00:00'):new Date(0);
+  const to=$('controlToDate').value?new Date($('controlToDate').value+'T23:59:59.999'):new Date();
+  rows=rows.filter(record=>new Date(record.date)>=from&&new Date(record.date)<=to);
+ }
+ const counts=db.partners.map(partner=>({partner,count:rows.filter(record=>record.partnerId===partner.id).length})).filter(item=>item.count).sort((a,b)=>b.count-a.count||a.partner.name.localeCompare(b.partner.name,'cs'));
+ $('controlFilteredCount').textContent=rows.length;
+ $('controlActiveCount').textContent=counts.length;
+ const maxCount=Math.max(1,...counts.map(item=>item.count));
+ $('controlPartnerStats').innerHTML=counts.map(item=>`<div class="barline"><span>${esc(item.partner.name)}</span><div class="track"><div class="fill" style="width:${item.count/maxCount*100}%;background:${teacherColor(item.partner.color, 'var(--accent)')}"></div></div><b>${item.count}</b></div>`).join('')||'<p class="sub">Žádná kontrolní činnost ve vybraném období.</p>';
+ const months={};
+ rows.forEach(record=>{const date=new Date(record.date);const key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');months[key]=(months[key]||0)+1});
+ const monthEntries=Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0]));
+ const maxMonth=Math.max(1,...monthEntries.map(item=>item[1]));
+ $('controlMonthStats').innerHTML=monthEntries.map(([key,count])=>`<div class="barline"><span>${key}</span><div class="track"><div class="fill" style="width:${count/maxMonth*100}%;background:var(--accent)"></div></div><b>${count}</b></div>`).join('')||'<p class="sub">Žádná kontrolní činnost ve vybraném období.</p>';
+ const tally=(field,target,color)=>{
+  const totals=Object.create(null);
+  rows.forEach(record=>(Array.isArray(record[field])?record[field]:[]).forEach(name=>{totals[name]=(totals[name]||0)+1}));
+  const entries=Object.entries(totals).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'cs'));
+  const max=Math.max(1,...entries.map(item=>item[1]));
+  $(target).innerHTML=entries.map(([name,count])=>`<div class="barline"><span style="overflow-wrap:anywhere">${esc(name)}</span><div class="track"><div class="fill" style="width:${count/max*100}%;background:${color}"></div></div><b>${count}</b></div>`).join('')||'<p class="sub">Žádné úkony ve vybraném období.</p>';
+ };
+ tally('positive','controlPositiveStats','var(--accent)');
+ tally('negative','controlNegativeStats','#f28b82');
+}
+$('allTime').addEventListener('change',()=>{
+ if($('allTime').checked)$('currentMonth').checked=false;
+ renderStats();
+});
+$('currentMonth').addEventListener('change',()=>{
+ if($('currentMonth').checked)$('allTime').checked=false;
+ renderStats();
+});
+$('fromDate').addEventListener('change',renderStats);$('toDate').addEventListener('change',renderStats);
+$('controlAllTime').addEventListener('change',()=>{if($('controlAllTime').checked)$('controlCurrentMonth').checked=false;renderControlStats()});
+$('controlCurrentMonth').addEventListener('change',()=>{if($('controlCurrentMonth').checked)$('controlAllTime').checked=false;renderControlStats()});
+$('controlFromDate').addEventListener('change',renderControlStats);$('controlToDate').addEventListener('change',renderControlStats);
+function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_control-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+$('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records)||(x.controls!==undefined&&!Array.isArray(x.controls)))throw Error();if(x.partners.length>10000||x.records.length>100000||(x.controls||[]).length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}for(const c of x.controls||[]){if(typeof c.id!=='string'||typeof c.partnerId!=='string'||typeof c.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;if (await save(normalizeData(x))) toast('Záloha obnovena.'); }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
+$('today').textContent = new Date().toLocaleDateString('cs-CZ', { dateStyle: 'full' });
+
+function applyWorkspaceData(data) {
+  const next = normalizeData(data);
+  db = next;
+  editing = null;
+  modalKind = '';
+  closeModal();
+  $('modalTitle').textContent = '';
+  $('modalBody').replaceChildren();
+  render();
+}
+
+let accountUi;
+const dataUi = initializeDataUi({
+  saveData(data) {
+    const targetId = adminUi.getTargetId();
+    return targetId === null
+      ? teacherApi.saveData(data)
+      : teacherApi.saveAccountData(targetId, data);
+  },
+  applySavedData(data) {
+    db = data;
+    render();
+  },
+  onSessionExpired: () => accountUi.expire(),
+  notify: toast,
+});
+
+const adminUi = initializeAdminUi({
+  applyData: applyWorkspaceData,
+  notify: toast,
+  onSessionExpired: () => accountUi.expire(),
+  isSaving: dataUi.isSaving,
+});
+
+accountUi = initializeAccountUi({
+  applyData: applyWorkspaceData,
+  onUserChanged: user => { void adminUi.setUser(user); },
+  clearData() {
+    db = normalizeData();
+    editing = null;
+    modalKind = '';
+    closeModal();
+    $('modalTitle').textContent = '';
+    $('modalBody').replaceChildren();
+    $('toast').textContent = '';
+    $('toast').classList.add('hidden');
+    render();
+  },
+  notify: toast,
+  isSaving: dataUi.isSaving,
+});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+ const hadController=!!navigator.serviceWorker.controller;
+ if(hadController)navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload(),{once:true});
+ navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
+}
+</script>
+</body></html>
+

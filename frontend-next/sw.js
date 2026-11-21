@@ -1,6 +1,6 @@
 'use strict';
 
-const cacheName = 'teacher-statistik-public-assets-v1';
+const cacheName = 'teacher-control-public-assets-v2';
 const assetUrls = new Set([
   'manifest.webmanifest',
   'apple-touch-icon.png',

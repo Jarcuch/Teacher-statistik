@@ -1,0 +1,14 @@
+[Unit]
+Description=Stavový panel aplikací na LCD
+After=dev-fb0.device teacher-statistic.service
+
+[Service]
+Type=simple
+User=jarcuchweb
+SupplementaryGroups=video
+ExecStart=/usr/bin/python3 /home/jarcuchweb/teacher-statistic/lcd-status-divider.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

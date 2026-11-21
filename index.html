@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#10131b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Teacher_statistik">
+<meta name="apple-mobile-web-app-title" content="Teacher_control">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<title>Teacher_statistik</title>
+<title>Teacher_control</title>
 <style>
 :root{color-scheme:dark;--bg:#0e1119;--panel:#191f2b;--panel2:#222a39;--muted:#9ba6b8;--text:#f5f6fa;--accent:#ffffff;--line:#30394a;--danger:#ff647c}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
@@ -41,7 +41,7 @@ main{width:100%;flex:1;display:flex;flex-direction:column}
 </head>
 <body>
 <div id="app">
-<header><div><h1>Teacher_statistik</h1><div class="sub" id="today"></div></div><img class="app-logo" src="icon-192.png" alt="" width="44" height="44"></header>
+<header><div><h1>Teacher_control</h1><div class="sub" id="today"></div></div><img class="app-logo" src="icon-192.png" alt="" width="44" height="44"></header>
 <main>
 <section id="home" class="page">
  <div class="grid">
@@ -471,7 +471,7 @@ $('fromDate').addEventListener('change',renderStats);$('toDate').addEventListene
 $('controlAllTime').addEventListener('change',()=>{if($('controlAllTime').checked)$('controlCurrentMonth').checked=false;renderControlStats()});
 $('controlCurrentMonth').addEventListener('change',()=>{if($('controlCurrentMonth').checked)$('controlAllTime').checked=false;renderControlStats()});
 $('controlFromDate').addEventListener('change',renderControlStats);$('controlToDate').addEventListener('change',renderControlStats);
-function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_statistik-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+function exportData(){const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),...db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Teacher_control-zaloha-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
 $('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.partners)||!Array.isArray(x.records)||(x.controls!==undefined&&!Array.isArray(x.controls)))throw Error();if(x.partners.length>10000||x.records.length>100000||(x.controls||[]).length>100000)throw Error();for(const p of x.partners){if(typeof p.id!=='string'||typeof p.name!=='string')throw Error();}for(const r of x.records){if(typeof r.id!=='string'||typeof r.partnerId!=='string'||typeof r.date!=='string')throw Error()}for(const c of x.controls||[]){if(typeof c.id!=='string'||typeof c.partnerId!=='string'||typeof c.date!=='string')throw Error()}if(!confirm('Obnovit zálohu? Aktuální data budou nahrazena.'))return;const previous=db;db=normalizeData(x);try{save();toast('Záloha obnovena.')}catch{db=previous;toast('Zálohu se nepodařilo uložit. Uvolněte místo v úložišti prohlížeče a zkuste to znovu.')} }catch{toast('Soubor zálohy není platný.')}e.target.value=''});
 load();
 $('today').textContent=new Date().toLocaleDateString('cs-CZ',{dateStyle:'full'});

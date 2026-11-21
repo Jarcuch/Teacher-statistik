@@ -1,6 +1,7 @@
 'use strict';
 
 const teacherApi = (() => {
+  const baseUrl = new URL("./", document.currentScript.src);
   async function request(path, method = 'GET', payload) {
     const options = {
       method,
@@ -14,7 +15,7 @@ const teacherApi = (() => {
       options.body = JSON.stringify(payload);
     }
 
-    const response = await fetch(path, options);
+    const response = await fetch(new URL(path.slice(1), baseUrl), options);
     if (!response.ok) {
       const error = new Error(`Požadavek selhal (HTTP ${response.status}).`);
       error.status = response.status;
@@ -33,6 +34,7 @@ const teacherApi = (() => {
   return Object.freeze({
     listUsers: () => request('/admin/users'),
     createUser: (username, password) => request('/admin/users', 'POST', { username, password }),
+    resetPassword: (id, password) => request(`/admin/users/${id}/password`, 'PUT', { password }),
     deleteUser: id => request(accountDataPath(id).slice(0, -'/data'.length), 'DELETE'),
     readAccountData: id => request(accountDataPath(id)),
     saveAccountData: (id, data) => request(accountDataPath(id), 'PUT', { data }),

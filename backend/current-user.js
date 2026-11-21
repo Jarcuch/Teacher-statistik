@@ -3,12 +3,12 @@
 const { homedir } = require('node:os');
 const { join } = require('node:path');
 const sqlite = require('sqlite3');
-const { getSessionUserId } = require('./sessions');
+const { getSession } = require('./sessions');
 const { getSessionToken } = require('./session-http');
 
 const databasePath = join(homedir(), 'teacher-data', 'teacher.db');
 
-function findUserById(userId) {
+function findUserById(userId, verifiedHash) {
   return new Promise((resolve, reject) => {
     const db = new sqlite.Database(databasePath, sqlite.OPEN_READONLY, openError => {
       if (openError) {
@@ -17,8 +17,8 @@ function findUserById(userId) {
       }
 
       db.get(
-        'SELECT id, username, role FROM users WHERE id = ?',
-        [userId],
+        'SELECT id, username, role FROM users WHERE id = ? AND password_hash = ?',
+        [userId, verifiedHash],
         (queryError, user) => {
           db.close(closeError => {
             const error = queryError || closeError;
@@ -36,8 +36,8 @@ function findUserById(userId) {
 
 async function getCurrentUser(req) {
   const token = getSessionToken(req);
-  const userId = getSessionUserId(token);
-  return userId === null ? null : findUserById(userId);
+  const session = getSession(token);
+  return session ? findUserById(session.userId, session.verifiedHash) : null;
 }
 
 module.exports = { getCurrentUser };

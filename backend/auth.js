@@ -28,7 +28,7 @@ async function authenticate(username, password) {
     return null;
   }
 
-  return { id: user.id, username: user.username, role: user.role };
+  return { user: { id: user.id, username: user.username, role: user.role }, verifiedHash: user.password_hash };
 }
 
 module.exports = { authenticate };

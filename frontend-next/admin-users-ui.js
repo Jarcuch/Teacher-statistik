@@ -11,6 +11,13 @@ function initializeAdminUi({ applyData, notify, onSessionExpired, isSaving }) {
   const passwordInput = document.getElementById('adminNewPassword');
   const confirmInput = document.getElementById('adminConfirmPassword');
   const deleteAccount = document.getElementById('adminDeleteAccount');
+  const resetPanel = document.getElementById('resetPasswordPanel');
+  const resetForm = document.getElementById('resetPasswordForm');
+  function clearResetForm() {
+    resetForm.reset();
+    resetPanel.open = false;
+    resetPanel.hidden = true;
+  }
   const accounts = new Map();
   let admin = null;
   let targetId = null;
@@ -19,6 +26,8 @@ function initializeAdminUi({ applyData, notify, onSessionExpired, isSaving }) {
   function updateActiveLabel() {
     activeLabel.textContent = 'Zobrazená data: ' +
       (targetId === null ? admin.username : accounts.get(targetId).username);
+    clearResetForm();
+    resetPanel.hidden = accounts.get(targetId)?.role !== 'user';
     deleteAccount.disabled = accounts.get(targetId)?.role !== 'user';
   }
 
@@ -56,6 +65,7 @@ function initializeAdminUi({ applyData, notify, onSessionExpired, isSaving }) {
     admin = user?.role === 'admin' ? user : null;
     targetId = null;
     accounts.clear();
+    clearResetForm();
     form.reset();
     panel.hidden = !admin;
     selector.replaceChildren(new Option('Moje data', ''));
@@ -131,6 +141,23 @@ function initializeAdminUi({ applyData, notify, onSessionExpired, isSaving }) {
     }, error => error.status === 409
       ? 'Účet s tímto jménem už existuje nebo chybí oprávnění.'
       : 'Účet se nepodařilo vytvořit. Zkontrolujte jméno a heslo.');
+  });
+
+  resetForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const account = accounts.get(targetId);
+    if (!admin || busy || isSaving() || account?.role !== 'user') return;
+    const password = document.getElementById('resetPassword').value;
+    if (password !== document.getElementById('repeatPassword').value) return notify('Hesla se neshodují.');
+    if ([...password].length < 15 || new TextEncoder().encode(password).length > 1024) {
+      return notify('Heslo musí mít alespoň 15 znaků a nejvýše 1024 bajtů.');
+    }
+    if (!confirm('Změnit heslo účtu ' + account.username + ' a odhlásit jeho zařízení?')) return;
+    void runAction(async () => {
+      await teacherApi.resetPassword(account.id, password);
+      updateActiveLabel();
+      notify('Heslo účtu ' + account.username + ' bylo změněno.');
+    }, 'Heslo se nepodařilo změnit.');
   });
 
   deleteAccount.addEventListener('click', () => {

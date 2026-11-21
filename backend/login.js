@@ -71,18 +71,19 @@ async function handleLogin(req, res) {
   }
 
   activeChecks += 1;
-  let user;
+  let verified;
   try {
-    user = await authenticate(credentials?.username, credentials?.password);
+    verified = await authenticate(credentials?.username, credentials?.password);
   } finally {
     activeChecks -= 1;
   }
 
-  if (!user) {
+  if (!verified) {
     return sendJson(res, 401, { error: 'Nesprávné jméno nebo heslo.' });
   }
 
-  const token = createSession(user.id);
+  const { user, verifiedHash } = verified;
+  const token = createSession(user.id, verifiedHash);
   if (!token) {
     return sendJson(res, 503, { error: 'Přihlášení je dočasně nedostupné.' });
   }

@@ -44,6 +44,11 @@ async function handleRequest(req, res) {
     return handleAdminCreateUser(req, res);
   }
 
+  const passwordPath = /^\/admin\/users\/([1-9][0-9]*)\/password$/.exec(req.url);
+  if (req.method === 'PUT' && passwordPath) {
+    return handleAdminCreateUser(req, res, passwordPath[1]);
+  }
+
   const adminUserPath = /^\/admin\/users\/([^/?]+)$/.exec(req.url);
   if (req.method === 'DELETE' && adminUserPath) {
     return handleAdminDeleteUser(req, res, adminUserPath[1]);

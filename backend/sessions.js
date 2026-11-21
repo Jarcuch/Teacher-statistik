@@ -6,7 +6,7 @@ const sessions = new Map();
 const lifetimeSeconds = 60 * 60;
 const maxSessions = 1000;
 
-function createSession(userId) {
+function createSession(userId, verifiedHash) {
   const now = Date.now();
 
   for (const [token, session] of sessions) {
@@ -20,11 +20,11 @@ function createSession(userId) {
   }
 
   const token = randomBytes(32).toString('hex');
-  sessions.set(token, { userId, expiresAt: now + lifetimeSeconds * 1000 });
+  sessions.set(token, { userId, verifiedHash, expiresAt: now + lifetimeSeconds * 1000 });
   return token;
 }
 
-function getSessionUserId(token) {
+function getSession(token) {
   const session = sessions.get(token);
   if (!session) return null;
 
@@ -33,11 +33,11 @@ function getSessionUserId(token) {
     return null;
   }
 
-  return session.userId;
+  return session;
 }
 
 function deleteSession(token) {
   sessions.delete(token);
 }
 
-module.exports = { createSession, getSessionUserId, deleteSession, lifetimeSeconds };
+module.exports = { createSession, getSession, deleteSession, lifetimeSeconds };

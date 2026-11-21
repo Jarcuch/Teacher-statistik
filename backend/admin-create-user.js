@@ -55,7 +55,27 @@ function insertUser(adminId, username, hash) {
   });
 }
 
-async function handleAdminCreateUser(req, res) {
+function resetPassword(adminId, targetId, hash) {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite.Database(databasePath, sqlite.OPEN_READWRITE, error => {
+      if (error) return reject(error);
+      db.run(
+        `UPDATE users SET password_hash = ? WHERE id = ? AND role = 'user'
+         AND EXISTS (SELECT 1 FROM users WHERE id = ? AND role = 'admin')`,
+        [hash, targetId, adminId],
+        function (updateError) {
+          const changed = this?.changes === 1;
+          db.close(closeError => {
+            if (updateError || closeError) reject(updateError || closeError);
+            else resolve(changed);
+          });
+        }
+      );
+    });
+  });
+}
+
+async function handleAdminCreateUser(req, res, resetTargetId = null) {
   const admin = await getCurrentUser(req);
   if (admin?.role !== 'admin') {
     req.resume();
@@ -81,7 +101,7 @@ async function handleAdminCreateUser(req, res) {
   }
 
   const { username, password } = payload ?? {};
-  if (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(username)) {
+  if (resetTargetId === null && (typeof username !== 'string' || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(username))) {
     return sendJson(res, 400, { error: 'Neplatné uživatelské jméno.' });
   }
   if (
@@ -93,6 +113,11 @@ async function handleAdminCreateUser(req, res) {
   }
 
   const hash = await hashPassword(password);
+  if (resetTargetId !== null) {
+    if (!await resetPassword(admin.id, resetTargetId, hash)) return sendJson(res, 404, { error: 'Běžný účet nebyl nalezen.' });
+    res.writeHead(204, { 'Cache-Control': 'no-store' });
+    return res.end();
+  }
   if (!await insertUser(admin.id, username, hash)) {
     return sendJson(res, 409, { error: 'Účet s tímto jménem už existuje nebo chybí oprávnění.' });
   }

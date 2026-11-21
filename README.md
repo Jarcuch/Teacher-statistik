@@ -48,3 +48,9 @@ Teacher_control má vlastní úložiště v prohlížeči. Náslechové záznamy
 
 Bílé logo ve tvaru štítu s průhledným okolím se používá v aplikaci i jako ikona při přidání na plochu, včetně iPhonu.
 
+
+### Obnova hesla a veřejná cesta
+
+V panelu správce vyberte běžný účet a otevřete **Obnovit heslo**. Nové heslo zadejte dvakrát. Po změně se uživatel přihlásí novým heslem na všech zařízeních. Uložené záznamy zůstanou zachované.
+
+Serverová verze běží pod cestou `/teacher_control/`. Vzor nastavení je v [konfiguraci Nginxu](deploy/nginx/teacher-control.conf). Před nasazením nahraďte adresu rozhraní `192.0.2.10`, veřejnou adresu `198.51.100.10` a cesty k certifikátu a soukromému klíči hodnotami svého serveru. Node.js poslouchá na `127.0.0.1:3001`. Nginx přesměruje původní kořenovou adresu na nový odkaz.
